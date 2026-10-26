@@ -20,7 +20,7 @@ interface Account { id: string; name: string; status: 'Active' | 'Pending closur
               <button type="button" class="copy-account" (click)="copy(account.id)" [attr.aria-label]="'Copy internal ID of ' + account.name"><img src="assets/7848-46607-imgLeftIcon.svg" width="12" height="12" alt="">{{ copied() === account.id ? 'Copied' : 'Copy internal ID' }}</button>
             </div></td>
             <td auraTableCell>20 Oct 2025</td>
-            <td auraTableCell><span class="account-level">4 <span title="Account level 4" aria-label="Account level 4"><img src="assets/7848-46609-imgDuotoneInfo.svg" width="20" height="20" alt=""></span></span></td>
+            <td auraTableCell><span class="account-level">4 <span title="Regulatory limit $1,000,000" aria-label="Regulatory limit $1,000,000"><img src="assets/7848-46609-imgDuotoneInfo.svg" width="20" height="20" alt=""></span></span></td>
             <td auraTableCell class="numeric"><div class="account-text"><span>$3,000,000</span>@if (account.overdraft) { <span class="account-note">Overdraft limit {{ account.overdraft }}</span> }</div></td>
             <td auraTableCell class="numeric"><div class="account-text status-text">
               <span auraBadge size="m" [appearance]="account.status === 'Active' ? 'success' : 'neutral'" [surface]="account.status === 'Pending closure' ? 'secondary' : 'tertiary'" [class.closed-badge]="account.status === 'Closed'">{{ account.status }}</span>
