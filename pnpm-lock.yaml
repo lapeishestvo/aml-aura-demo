@@ -99,6 +99,9 @@ importers:
       '@aura-ng/toast':
         specifier: 1.50.0
         version: 1.50.0(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(@aura-core/tailwind@3.4.0(tailwindcss@4.3.3)(tw-animate-css@1.4.0)(typescript@5.9.3))(@aura-ng/button@1.50.0(ce2d65c9f909e3c26ef38ed1cbfa44ba))(@aura-ng/cdk@1.50.0(b01ac899cf7ba9703a215dbf47f35d74))(@aura-ng/icons@3.1.0(@angular/common@21.2.24(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(@aura-core/tailwind@3.4.0(tailwindcss@4.3.3)(tw-animate-css@1.4.0)(typescript@5.9.3)))(class-variance-authority@0.7.1)(rxjs@7.8.2)
+      '@aura-ng/tooltip':
+        specifier: 1.50.0
+        version: 1.50.0(@angular/cdk@21.2.14(@angular/common@21.2.24(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(@angular/platform-browser@21.2.24(@angular/animations@21.2.24(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2)))(@angular/common@21.2.24(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2)))(rxjs@7.8.2))(@angular/common@21.2.24(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(@aura-core/tailwind@3.4.0(tailwindcss@4.3.3)(tw-animate-css@1.4.0)(typescript@5.9.3))(@aura-ng/cdk@1.50.0(b01ac899cf7ba9703a215dbf47f35d74))(rxjs@7.8.2)
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.1
@@ -579,6 +582,16 @@ packages:
       '@aura-ng/cdk': '>=1.0.0'
       '@aura-ng/icons': ^2.6.0 || ^3.0.0
       class-variance-authority: '>=0.7.0'
+      rxjs: '>=7.8.0'
+
+  '@aura-ng/tooltip@1.50.0':
+    resolution: {integrity: sha512-21A2ODqPIwKT3X6tTEmUMi+PWCIYMQ5DkOrzE0tNEMgxor4bX/ew4tvcIR60h3ka4JiW5S5a+rWQk1nADlAHqA==}
+    peerDependencies:
+      '@angular/cdk': '>=19.2.8'
+      '@angular/common': '>=19.2.8'
+      '@angular/core': '>=19.2.8'
+      '@aura-core/tailwind': ^3.3.0
+      '@aura-ng/cdk': '>=1.0.0'
       rxjs: '>=7.8.0'
 
   '@babel/code-frame@7.29.7':
@@ -3473,6 +3486,16 @@ snapshots:
       '@aura-ng/cdk': 1.50.0(b01ac899cf7ba9703a215dbf47f35d74)
       '@aura-ng/icons': 3.1.0(@angular/common@21.2.24(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(@aura-core/tailwind@3.4.0(tailwindcss@4.3.3)(tw-animate-css@1.4.0)(typescript@5.9.3))
       class-variance-authority: 0.7.1
+      rxjs: 7.8.2
+      tslib: 2.8.1
+
+  '@aura-ng/tooltip@1.50.0(@angular/cdk@21.2.14(@angular/common@21.2.24(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(@angular/platform-browser@21.2.24(@angular/animations@21.2.24(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2)))(@angular/common@21.2.24(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2)))(rxjs@7.8.2))(@angular/common@21.2.24(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(@aura-core/tailwind@3.4.0(tailwindcss@4.3.3)(tw-animate-css@1.4.0)(typescript@5.9.3))(@aura-ng/cdk@1.50.0(b01ac899cf7ba9703a215dbf47f35d74))(rxjs@7.8.2)':
+    dependencies:
+      '@angular/cdk': 21.2.14(@angular/common@21.2.24(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(@angular/platform-browser@21.2.24(@angular/animations@21.2.24(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2)))(@angular/common@21.2.24(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2)))(rxjs@7.8.2)
+      '@angular/common': 21.2.24(@angular/core@21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@angular/core': 21.2.24(@angular/compiler@21.2.24)(rxjs@7.8.2)
+      '@aura-core/tailwind': 3.4.0(tailwindcss@4.3.3)(tw-animate-css@1.4.0)(typescript@5.9.3)
+      '@aura-ng/cdk': 1.50.0(b01ac899cf7ba9703a215dbf47f35d74)
       rxjs: 7.8.2
       tslib: 2.8.1
 

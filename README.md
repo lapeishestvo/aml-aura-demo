@@ -13,7 +13,7 @@ pnpm install --frozen-lockfile
 pnpm start
 ```
 
-Local preview: http://127.0.0.1:4400. The initial workspace reuses an existing local dependency installation through an ignored symlink.
+Local preview: http://127.0.0.1:4400. Dependencies are installed locally for this project.
 
 ```sh
 pnpm typecheck

@@ -2,12 +2,13 @@ import { Component, input, signal } from '@angular/core';
 import { AuraBadgeDirective } from '@aura-ng/badge';
 import { AuraButtonComponent } from '@aura-ng/button';
 import { AuraTableComponents } from '@aura-ng/table';
+import { AuraTooltipComponents } from '@aura-ng/tooltip';
 
 interface Account { id: string; name: string; status: 'Active' | 'Pending closure' | 'Closed'; overdraft?: string; reason?: string; }
 
 @Component({
   selector: 'aml-account-table', standalone: true,
-  imports: [AuraTableComponents, AuraBadgeDirective],
+  imports: [AuraTableComponents, AuraBadgeDirective, AuraTooltipComponents],
   template: `
     <table auraTable [columns]="columns" class="accounts-table" [attr.aria-label]="label()">
       <thead auraTableHeader [sticky]="false"><tr auraTableHeaderRow>
@@ -20,7 +21,7 @@ interface Account { id: string; name: string; status: 'Active' | 'Pending closur
               <button type="button" class="copy-account" (click)="copy(account.id)" [attr.aria-label]="'Copy internal ID of ' + account.name"><img src="assets/7848-46607-imgLeftIcon.svg" width="12" height="12" alt="">{{ copied() === account.id ? 'Copied' : 'Copy internal ID' }}</button>
             </div></td>
             <td auraTableCell>20 Oct 2025</td>
-            <td auraTableCell><span class="account-level">4 <span title="Regulatory limit $1,000,000" aria-label="Regulatory limit $1,000,000"><img src="assets/7848-46609-imgDuotoneInfo.svg" width="20" height="20" alt=""></span></span></td>
+            <td auraTableCell><span class="account-level">4 <button type="button" class="account-info" auraTooltip="Regulatory limit $1,000,000" auraTooltipPosition="top" auraTooltipSize="m" aria-label="Regulatory limit"><img src="assets/7848-46609-imgDuotoneInfo.svg" width="20" height="20" alt=""></button></span></td>
             <td auraTableCell class="numeric"><div class="account-text"><span>$3,000,000</span>@if (account.overdraft) { <span class="account-note">Overdraft limit {{ account.overdraft }}</span> }</div></td>
             <td auraTableCell class="numeric"><div class="account-text status-text">
               <span auraBadge size="m" [appearance]="account.status === 'Active' ? 'success' : 'neutral'" [surface]="account.status === 'Pending closure' ? 'secondary' : 'tertiary'" [class.closed-badge]="account.status === 'Closed'">{{ account.status }}</span>
