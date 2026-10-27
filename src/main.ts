@@ -1,5 +1,7 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
+import { CasePanel } from './case-panel';
+import { createCases, advanceCase, validationError, type Person, type ReviewForm } from './case-model';
 import { DocumentsPage } from './documents';
 import { ProductsPage } from './products';
 import { AuraCellComponents } from '@aura-ng/cell';
@@ -7,7 +9,6 @@ import { AuraBadgeDirective } from '@aura-ng/badge';
 import { AuraButtonComponent } from '@aura-ng/button';
 import { AuraModalComponents, AuraModalService, injectModalContext } from '@aura-ng/modal';
 
-interface Person { name: string; description: string; match: boolean; shares?: string; }
 
 @Component({
   selector: 'aml-check-details', standalone: true,
@@ -81,47 +82,49 @@ class PeopleList {
 
 @Component({
   selector: 'aml-root', standalone: true,
-  imports: [AuraCellComponents, AuraBadgeDirective, CheckDetails, PeopleList, DocumentsPage, ProductsPage],
+  imports: [AuraCellComponents, AuraBadgeDirective, CheckDetails, PeopleList, DocumentsPage, ProductsPage, CasePanel],
   templateUrl: './app.html',
 })
 class AmlApp {
-  readonly active = signal('company-profile');
+  readonly active = signal('case');
+  readonly cases = signal(createCases());
+  readonly selectedCaseId = signal('AML-2026-001');
+  readonly currentCase = computed(() => this.cases().find(item => item.id === this.selectedCaseId())!);
+  readonly profile = computed(() => this.currentCase().profile);
   readonly copied = signal(false);
   readonly reportNotice = signal(false);
+  readonly panelError = signal('');
   readonly navigation = [
-    { id: 'section-1', label: '' }, { id: 'company-profile', label: 'Company profile' },
+    { id: 'case', label: 'Case' }, { id: 'company-profile', label: 'Company profile' },
+    { id: 'documents', label: 'Documents' }, { id: 'products', label: 'Products' },
     { id: 'risk-matrix', label: 'Risk matrix' }, { id: 'transactional-profile', label: 'Transactional profile' },
-    { id: 'documents', label: 'Documents' }, { id: 'section-6', label: '' },
-    { id: 'products', label: 'Products' }, { id: 'section-8', label: '' }, { id: 'section-9', label: '' },
+    { id: 'section-7', label: '' },
   ];
-  readonly mainInfo = [
-    { label: 'Legal name', value: 'Comercializadora Monteverde, S.A. de C.V.' },
-    { label: 'Trade name', value: 'Monteverde Suministros' },
-    { label: 'Company type', value: 'Persona Moral' },
-    { label: 'Legal form', value: 'Sociedad Anónima de Capital Variable (S.A. de C.V.)' },
-    { label: 'Economic Activities', value: 'Wholesale of office supplies and equipment' },
-    { label: 'Date of incorporation', value: '18 Mar 2016', note: '10 years, 6 months ago' },
-    { label: 'Registration city', value: 'Ciudad de México, Mexico' },
-    { label: 'Registration number', value: '123456' },
-    { label: 'RFC', value: 'ABC240315KX7' }, { label: 'Number of employees', value: '48' },
-  ];
+  readonly mainInfo = computed(() => {
+    const p = this.profile();
+    return [
+      { label: 'Legal name', value: p.legalName }, { label: 'Trade name', value: p.company },
+      { label: 'Company type', value: 'Persona Moral' }, { label: 'Legal form', value: p.legalName.includes('S. de R.L.') ? 'Sociedad de Responsabilidad Limitada de Capital Variable' : 'Sociedad Anónima de Capital Variable (S.A. de C.V.)' },
+      { label: 'Economic Activities', value: p.activity }, { label: 'Date of incorporation', value: p.incorporated },
+      { label: 'Registration city', value: p.city }, { label: 'Registration number', value: p.registration },
+      { label: 'RFC', value: p.rfc }, { label: 'Number of employees', value: p.employees },
+    ];
+  });
   readonly addressLabels = ['Primary', 'Legal', 'Inegi'];
-  readonly address = 'Av. Insurgentes Sur 1647, San José Insurgentes, CDMX, C.P. 03900';
-  readonly shareholders: Person[] = [
-    { name: 'Alejandro García Mendoza', description: 'Mexico, Male, 14 May 1978', match: false, shares: '45%, 4,500 shares' },
-    { name: 'María Fernanda López Ruiz', description: 'Mexico, Female, 22 Sep 1982', match: false, shares: '55%, 5,500 shares' },
-  ];
-  readonly ubo: Person[] = [
-    { ...this.shareholders[0], shares: undefined }, { ...this.shareholders[1], shares: undefined, match: true },
-    { name: 'Carlos Alberto Herrera Sánchez', description: 'Mexico, Male, 08 Nov 1975', match: false },
-    { name: 'Lucía Isabel Torres Vega', description: 'Mexico, Female, 03 Feb 1980', match: false },
-  ];
-  readonly representatives: Person[] = [
-    { ...this.ubo[0] }, { name: 'Patricia Elena Ramírez Castro', description: 'Mexico, Female, 17 Jul 1986', match: false },
-  ];
+  selectCase(id: string): void { this.selectedCaseId.set(id); this.panelError.set(''); this.copied.set(false); this.reportNotice.set(false); }
+  updateForm(patch: Partial<ReviewForm>): void {
+    this.cases.update(items => items.map(item => item.id === this.selectedCaseId() ? { ...item, form: { ...item.form, ...patch } } : item));
+    this.panelError.set('');
+  }
+  submitCase(): void {
+    const item = this.currentCase();
+    const error = validationError(item);
+    this.panelError.set(error);
+    if (!error) this.cases.update(items => items.map(candidate => candidate.id === item.id ? advanceCase(candidate) : candidate));
+  }
   select(event: MouseEvent, id: string): void { event.preventDefault(); this.active.set(id); }
   async copyId(): Promise<void> {
-    try { await navigator.clipboard.writeText('78767654678927'); this.copied.set(true); setTimeout(() => this.copied.set(false), 2000); }
+    try { await navigator.clipboard.writeText(this.profile().companyId); this.copied.set(true); setTimeout(() => this.copied.set(false), 2000); }
     catch { this.copied.set(false); }
   }
 }

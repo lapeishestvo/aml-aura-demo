@@ -127,3 +127,49 @@ aml-account-table { display: block; }
 
 @source '../node_modules/@aura-ng/tooltip';
 .account-info { display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; background: transparent; border-radius: 50%; }
+@source '../node_modules/@aura-ng/checkbox';
+@source '../node_modules/@aura-ng/radio-button';
+@source '../node_modules/@aura-ng/form-field-v2';
+@source '../node_modules/@aura-ng/input-v2';
+@source '../node_modules/@aura-ng/select-v2';
+@source '../node_modules/@aura-ng/listbox';
+@source '../node_modules/@aura-ng/dropdown';
+
+.crm-shell { display: flex; align-items: flex-start; min-height: 100dvh; }
+.case-switcher { position: sticky; top: 0; display: flex; flex-direction: column; gap: 16px; flex: 0 0 240px; width: 240px; padding: 20px 0 20px 20px; box-sizing: border-box; }
+.case-card { width: 100%; min-height: 56px; border: 1px solid var(--color-border-neutral-subtle, rgba(22,52,112,.16)); border-radius: 16px; padding: 10px 16px; background: transparent; text-align: left; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+.case-card.current { background: var(--color-bg-neutral-primary); border-color: transparent; }
+.case-card-title { font-size: 13px; line-height: 16px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.case-card-status { font-size: 11px; line-height: 13px; color: var(--color-tig-neutral-secondary); }
+.case-card:focus-visible { outline: 2px solid var(--color-tig-accent-primary); outline-offset: 2px; }
+.crm-shell > .screen { flex: 1; }
+.client-island { grid-template-columns: 200px minmax(0, 1fr); }
+.navigation { grid-column: 1; }
+.workspace { grid-column: 2; }
+.case-island { position: sticky; top: 20px; overflow: visible; }
+aml-case-panel { display: flex; flex-direction: column; gap: 4px; width: 100%; border-radius: var(--radius-sm); }
+.case-header.action-header { padding: 20px; height: auto; min-height: 88px; box-sizing: border-box; border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+.action-header h2 { font-size: 20px; line-height: 24px; font-weight: 650; }
+.action-header p { margin-top: 4px; color: var(--color-tig-neutral-secondary); }
+.case-content.action-content { height: auto; border-radius: 0 0 var(--radius-sm) var(--radius-sm); }
+.case-checklist { padding: 20px; }
+.control-group { display: flex; border: 1px solid var(--color-border-neutral-subtle, #d8dbe5); border-radius: 12px; padding: 3px; margin: 0; }
+.control-group.vertical { flex-direction: column; }
+.control-group.horizontal { flex-direction: row; gap: 8px; }
+.action-control[auraCell] { width: 100%; min-height: 48px; padding: 0 16px; gap: 12px; outline: none !important; }
+.action-control [auraCellText] { padding-block: 8px; }
+.action-control [auraCellTitle] { font-size: 15px; line-height: 20px; font-weight: 400; }
+.action-control [auraCellStart] { flex: none; }
+.horizontal .action-control { flex: 1; min-width: 0; position: relative; padding-inline: 12px; }
+.horizontal .action-control + .action-control::before { position: absolute; left: -5px; top: 4px; bottom: 4px; content: ''; border-left: 1px solid var(--color-border-neutral-subtle, #d8dbe5); }
+.action-control[data-selected] { background: var(--color-bg-accent-tertiary); }
+.decision-title { font-size: 17px; line-height: 20px; font-weight: 600; padding: 20px; }
+.decision-fields { padding: 0 20px; display: flex; flex-direction: column; gap: 12px; }
+.decision-fields aura-form-field { width: 100%; }
+.followup-field textarea { font-size: 15px; line-height: 20px; resize: none; }
+.case-action-footer { padding: 20px; }
+.case-action-footer > button[auraButton] { width: 100%; }
+.case-validation { color: var(--color-tig-error-primary); font-size: 13px; line-height: 16px; padding: 12px 20px 0; }
+.request-placeholder { height: 160px; margin: 0 20px; display: flex; align-items: center; justify-content: center; background: var(--color-bg-base); color: var(--color-tig-neutral-secondary); border-block: 1px dashed var(--color-border-neutral-subtle, #d8dbe5); text-align: center; font-style: italic; }
+.case-outcome { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.outcome-followup { white-space: pre-wrap; }

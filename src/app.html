@@ -1,9 +1,15 @@
+<div class="crm-shell">
+  <nav class="case-switcher" aria-label="Cases">
+    @for (item of cases(); track item.id) {
+      <button type="button" class="case-card" [class.current]="selectedCaseId() === item.id" [attr.aria-current]="selectedCaseId() === item.id ? 'true' : null" (click)="selectCase(item.id)"><span class="case-card-title">{{ item.profile.company }}</span><span class="case-card-status">{{ item.status }}</span></button>
+    }
+  </nav>
 <main class="screen" aria-label="AML case review" data-node-id="7160:35642">
   <div class="layout">
     <section class="client-island" [class.short-page]="active() !== 'company-profile'" aria-label="Company profile">
       <header class="client-header">
-        <div><h1>Monteverde Suministros</h1><p>Persona Moral</p></div>
-        <span auraBadge appearance="warning" surface="secondary" size="m">Medium risk level</span>
+        <div><h1>{{ profile().company }}</h1><p>Persona Moral</p></div>
+        <span auraBadge [appearance]="profile().risk === 'High' ? 'error' : (profile().risk === 'Low' ? 'success' : 'warning')" surface="secondary" size="m">{{ profile().risk }} risk level</span>
       </header>
       <nav class="navigation" aria-label="Company sections">
         @for (item of navigation; track item.id) {
@@ -18,38 +24,40 @@
         @if (active() === 'company-profile') {
           <div class="page-title"><h2>Company profile</h2></div>
           <section class="info-section"><h3>Main info</h3><dl class="fields">
-            @for (field of mainInfo; track field.label) {
-              <div class="field-row"><dt>{{ field.label }}</dt><dd>{{ field.value }}@if (field.note) { <span class="secondary"> {{ field.note }}</span> }</dd></div>
+            @for (field of mainInfo(); track field.label) {
+              <div class="field-row"><dt>{{ field.label }}</dt><dd>{{ field.value }}</dd></div>
             }
           </dl></section>
           <section class="info-section"><h3>Plata info</h3><dl class="fields">
-            <div class="field-row"><dt>Company ID</dt><dd><button class="copy-id" type="button" (click)="copyId()" [attr.aria-label]="copied() ? 'Company ID copied' : 'Copy company ID'">78767654678927 <img src="assets/7160-35683-imgStrokeCopy.svg" width="20" height="20" alt=""></button>@if (copied()) { <span class="copy-status" role="status">Copied</span> }</dd></div>
+            <div class="field-row"><dt>Company ID</dt><dd><button class="copy-id" type="button" (click)="copyId()" [attr.aria-label]="copied() ? 'Company ID copied' : 'Copy company ID'">{{ profile().companyId }} <img src="assets/7160-35683-imgStrokeCopy.svg" width="20" height="20" alt=""></button>@if (copied()) { <span class="copy-status" role="status">Copied</span> }</dd></div>
             <div class="field-row"><dt>Client status</dt><dd>Active</dd></div>
-            <div class="field-row"><dt>Registered in Plata</dt><dd>10 Jul 2024 <span class="secondary">2 years, 3 months ago</span></dd></div>
+            <div class="field-row"><dt>Registered in Plata</dt><dd>{{ profile().registered }}</dd></div>
           </dl></section>
           <section class="info-section"><h3>Adresses</h3><dl class="fields">
             @for (label of addressLabels; track label) {
-              <div class="field-row"><dt>{{ label }}</dt><dd>{{ address }}@if (label === 'Primary') { <span auraBadge appearance="success" surface="tertiary" size="s"><img src="assets/7160-35708-imgStrokeCheckBig.svg" width="12" height="12" alt="">Verified</span> }</dd></div>
+              <div class="field-row"><dt>{{ label }}</dt><dd>{{ profile().address }}@if (label === 'Primary') { <span auraBadge appearance="success" surface="tertiary" size="s"><img src="assets/7160-35708-imgStrokeCheckBig.svg" width="12" height="12" alt="">Verified</span> }</dd></div>
             }
           </dl></section>
           <section class="info-section"><h3>Contact info</h3><dl class="fields">
-            <div class="field-row"><dt>Website</dt><dd><a href="https://www.monteverde-suministros.example" target="_blank" rel="noopener">www.monteverde-suministros.example</a></dd></div>
-            <div class="field-row"><dt>Phone</dt><dd>+52 55 5550 1847</dd></div>
-            <div class="field-row"><dt>Email</dt><dd>contacto&#64;monteverde-suministros.example</dd></div>
+            <div class="field-row"><dt>Website</dt><dd><a [href]="'https://' + profile().website" target="_blank" rel="noopener">{{ profile().website }}</a></dd></div>
+            <div class="field-row"><dt>Phone</dt><dd>{{ profile().phone }}</dd></div>
+            <div class="field-row"><dt>Email</dt><dd>{{ profile().email }}</dd></div>
           </dl></section>
-          <section class="info-section"><h3>Shareholders</h3><aml-people [people]="shareholders" assetPrefix="7160-35971" /></section>
-          <section class="info-section"><h3>UBO</h3><aml-people [people]="ubo" assetPrefix="7160-35977" /></section>
-          <section class="info-section"><h3>Legal representatives</h3><aml-people [people]="representatives" assetPrefix="7160-35984" /></section>
+          <section class="info-section"><h3>Shareholders</h3><aml-people [people]="profile().shareholders" assetPrefix="7160-35971" /></section>
+          <section class="info-section"><h3>UBO</h3><aml-people [people]="profile().ubo" assetPrefix="7160-35977" /></section>
+          <section class="info-section"><h3>Legal representatives</h3><aml-people [people]="profile().representatives" assetPrefix="7160-35984" /></section>
           <section class="info-section company-check">
             <header class="check-header"><h3>Lexis Nexis check</h3><span auraBadge appearance="success" surface="tertiary" size="m">No match</span><button class="text-link" (click)="reportNotice.set(true)">Open check in Lexis Nexis <img src="assets/7168-37907-imgRightIcon.svg" width="16" height="16" alt=""></button></header>
             <aml-check-details />
             @if (reportNotice()) { <p class="demo-notice report-notice" role="status">The external report is not connected in this demo.</p> }
           </section>
-        } @else if (active() === 'documents') { <aml-documents />
-        } @else if (active() === 'products') { <aml-products />
+        } @else if (active() === 'documents') { <aml-documents [supportingDocuments]="profile().supportingDocuments" />
+        } @else if (active() === 'products') { <aml-products [businessAccounts]="profile().accounts" [apartadoAccounts]="profile().apartado" />
         } @else { <div class="workspace-tile"></div> }
       </section>
     </section>
-    <aside class="case-island" aria-label="Case panel"><header class="case-header"></header><div class="case-content"></div></aside>
+    <aside class="case-island" aria-label="Case panel"><aml-case-panel [item]="currentCase()" [error]="panelError()" (formChange)="updateForm($event)" (submitted)="submitCase()" /></aside>
   </div>
 </main>
+
+</div>

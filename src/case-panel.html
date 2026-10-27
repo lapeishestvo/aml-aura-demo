@@ -1,0 +1,65 @@
+<header class="case-header action-header"><h2>{{ item().status }}@if (item().edd) { <span class="secondary"> EDD-{{ item().edd }}</span> }</h2><p>Ekaterina Tarasova</p></header>
+<section class="case-content action-content" aria-label="Case actions">
+  @if (finished() || waiting()) {
+    <div class="case-outcome" role="status"><p>{{ item().resolution || item().status }}</p>
+      @if (waiting()) { <p class="secondary">{{ item().status === 'Waiting for documents' ? 'The document request has been recorded.' : 'The clarification request has been recorded.' }}</p> }
+      @if (item().lastFollowUp) { <p class="outcome-followup">{{ item().lastFollowUp }}</p> }
+    </div>
+  } @else {
+    <form (ngSubmit)="submitted.emit()" novalidate>
+      <div class="case-checklist"><div class="control-group vertical" role="group" aria-label="Review checklist">
+        @for (checked of item().form.checks; track $index) {
+          <label auraCell size="m" class="action-control" twClass="outline-none">
+            <span auraCellStart><input auraCheckbox type="checkbox" size="m" [checked]="checked" (change)="changeCheck($index, $any($event.target).checked)"></span>
+            <span auraCellText><span auraCellTextLine><span auraCellTitle>{{ initial() ? ($index === 0 ? 'Check the alert' : 'Decide how to proceed with the case') : ('Point ' + ($index + 1)) }}</span></span></span>
+          </label>
+        }
+      </div></div>
+      @if (requesting()) {
+        <div class="request-placeholder"><p>Document request form<br>TBD</p></div>
+      } @else {
+        <h3 class="decision-title">Decision</h3>
+        <div class="decision-fields">
+          @if (initial()) {
+            <div class="control-group horizontal" role="radiogroup" aria-label="Decision">
+              @for (option of [{value: 'true-positive', label: 'True positive'}, {value: 'false-positive', label: 'False positive'}]; track option.value) {
+                <label auraCell size="m" class="action-control" twClass="outline-none" [attr.data-selected]="item().form.decision === option.value ? '' : null">
+                  <span auraCellStart><input auraRadioButton size="m" type="radio" name="decision" [value]="option.value" [checked]="item().form.decision === option.value" (change)="changeDecision($any(option.value))"></span>
+                  <span auraCellText><span auraCellTextLine><span auraCellTitle>{{ option.label }}</span></span></span>
+                </label>
+              }
+            </div>
+            @if (item().form.decision === 'true-positive') {
+              <div class="control-group horizontal" role="radiogroup" aria-label="Next action">
+                @for (option of [{value:'edd1',label:'Start EDD-1'}, {value:'escalate',label:'Escalate'}]; track option.value) {
+                  <label auraCell size="m" class="action-control" twClass="outline-none" [attr.data-selected]="item().form.next === option.value ? '' : null">
+                    <span auraCellStart><input auraRadioButton size="m" type="radio" name="next-action" [value]="option.value" [checked]="item().form.next === option.value" (change)="formChange.emit({next: $any(option.value), escalateTo: ''})"></span>
+                    <span auraCellText><span auraCellTextLine><span auraCellTitle>{{ option.label }}</span></span></span>
+                  </label>
+                }
+              </div>
+            }
+          } @else {
+            <div class="control-group vertical" role="radiogroup" aria-label="Decision">
+              @for (option of options(); track option.value) {
+                <label auraCell size="m" class="action-control" twClass="outline-none" [attr.data-selected]="item().form.decision === option.value ? '' : null">
+                  <span auraCellStart><input auraRadioButton size="m" type="radio" name="decision" [value]="option.value" [checked]="item().form.decision === option.value" (change)="changeDecision(option.value)"></span>
+                  <span auraCellText><span auraCellTextLine><span auraCellTitle>{{ option.label }}</span></span></span>
+                </label>
+              }
+            </div>
+          }
+          @if (escalating()) {
+            <aura-form-field size="m" surface="secondary"><aura-select>
+              <aura-select-form-field-trigger placeholder="Escalate to" aria-label="Escalate to" [ngModel]="item().form.escalateTo" [ngModelOptions]="{standalone:true}" (ngModelChange)="formChange.emit({escalateTo:$event})" />
+              <ul *auraPanel auraListbox>@for (target of escalationTargets; track target) { <li auraOption [value]="target">{{ target }}</li> }</ul>
+            </aura-select></aura-form-field>
+          }
+          <aura-form-field size="m" surface="secondary" class="followup-field"><textarea auraInput placeholder="Follow-up" aria-label="Follow-up" [minRows]="3" [maxRows]="3" [ngModel]="item().form.followUp" [ngModelOptions]="{standalone:true}" (ngModelChange)="formChange.emit({followUp:$event})"></textarea></aura-form-field>
+        </div>
+      }
+      @if (error()) { <p class="case-validation" role="alert">{{ error() }}</p> }
+      <footer class="case-action-footer"><button auraButton appearance="primary" size="l" type="submit">{{ buttonLabel() }}</button></footer>
+    </form>
+  }
+</section>

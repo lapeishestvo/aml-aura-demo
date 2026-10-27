@@ -1,0 +1,52 @@
+import { Component, computed, input, output } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { AuraCellComponents } from '@aura-ng/cell';
+import { AuraButtonComponent } from '@aura-ng/button';
+import { AuraCheckboxComponent } from '@aura-ng/checkbox';
+import { AuraRadioButtonDirective } from '@aura-ng/radio-button';
+import { AuraFormFieldComponents } from '@aura-ng/form-field-v2';
+import { AuraInputComponents } from '@aura-ng/input-v2';
+import { AuraSelectComponents } from '@aura-ng/select-v2';
+import { AuraListboxComponents } from '@aura-ng/listbox';
+import { isEscalation, type ReviewCase, type ReviewForm, type Decision } from './case-model';
+
+@Component({
+  selector: 'aml-case-panel', standalone: true,
+  imports: [FormsModule, AuraCellComponents, AuraButtonComponent, AuraCheckboxComponent, AuraRadioButtonDirective, AuraFormFieldComponents, AuraInputComponents, AuraSelectComponents, AuraListboxComponents],
+  templateUrl: './case-panel.html',
+})
+export class CasePanel {
+  readonly item = input.required<ReviewCase>();
+  readonly error = input('');
+  readonly formChange = output<Partial<ReviewForm>>();
+  readonly submitted = output<void>();
+  readonly initial = computed(() => this.item().status === 'Initial review');
+  readonly requesting = computed(() => this.item().status === 'Documents request');
+  readonly waiting = computed(() => ['Waiting for documents', 'Waiting for clarification'].includes(this.item().status));
+  readonly finished = computed(() => ['Closed', 'Escalated'].includes(this.item().status));
+  readonly escalating = computed(() => isEscalation(this.item().form));
+  readonly options = computed(() => this.item().status === 'Client didn’t provide documents' ? [
+    { value: 'not-suspicious' as Decision, label: 'Client is no longer suspicious' },
+    { value: 'edd2' as Decision, label: 'Request another documents (EDD-2)' },
+    { value: 'escalate' as Decision, label: 'Escalate case' },
+  ] : [
+    { value: 'not-suspicious' as Decision, label: 'Client is no longer suspicious' },
+    { value: 'clarification' as Decision, label: 'Request client’s clarification' },
+    { value: 'edd2' as Decision, label: 'Request additional documents (EDD-2)' },
+    { value: 'escalate' as Decision, label: 'Escalate case' },
+  ]);
+  readonly buttonLabel = computed(() => {
+    const item = this.item();
+    if (this.requesting()) return 'Request documents';
+    if (this.escalating()) return 'Escalate case';
+    if (item.form.decision === 'false-positive' || item.form.decision === 'not-suspicious') return 'Close case';
+    if (item.form.decision === 'true-positive' && item.form.next === 'edd1') return 'Start EDD1';
+    if (item.form.decision === 'edd2') return 'Start EDD-2';
+    return 'Continue';
+  });
+  readonly escalationTargets = ['Manager', 'Compliance officer'];
+  changeDecision(decision: Decision): void { this.formChange.emit({ decision, next: '', escalateTo: '' }); }
+  changeCheck(index: number, checked: boolean): void {
+    const checks = [...this.item().form.checks]; checks[index] = checked; this.formChange.emit({ checks });
+  }
+}

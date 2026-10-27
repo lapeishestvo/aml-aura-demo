@@ -32,9 +32,12 @@ The build uses `/aml-aura-demo/` as its base URL and includes local icons and fo
 
 ## Prototype scope
 
+- Three independent cases with a left case switcher and status-based action panels.
 - Company profile with people and Lexis Nexis detail modals.
 - Documents page; actual document files are not attached.
 - Products with collapsible groups, additional account rows and ID copying.
 - All account information is demo data; no live financial services are connected.
 
 Design reference: https://www.figma.com/design/EKjBlyuxlJ0LmZhU3CvNQ8/AML
+
+Workflow checks: `node --test tests/case-flow.test.mjs`. Review selections are kept per case while the demo is open. The Documents request form remains a TBD placeholder from the design.
