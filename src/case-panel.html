@@ -50,12 +50,12 @@
             </div>
           }
           @if (escalating()) {
-            <aura-form-field size="m" surface="secondary"><aura-select>
+            <aura-form-field size="m" surface="primary"><aura-select>
               <aura-select-form-field-trigger placeholder="Escalate to" aria-label="Escalate to" [ngModel]="item().form.escalateTo" [ngModelOptions]="{standalone:true}" (ngModelChange)="formChange.emit({escalateTo:$event})" />
               <ul *auraPanel auraListbox>@for (target of escalationTargets; track target) { <li auraOption [value]="target">{{ target }}</li> }</ul>
             </aura-select></aura-form-field>
           }
-          <aura-form-field size="m" surface="secondary" class="followup-field"><textarea auraInput placeholder="Follow-up" aria-label="Follow-up" [minRows]="3" [maxRows]="3" [ngModel]="item().form.followUp" [ngModelOptions]="{standalone:true}" (ngModelChange)="formChange.emit({followUp:$event})"></textarea></aura-form-field>
+          <aura-form-field size="m" surface="primary" class="followup-field"><textarea auraInput placeholder="Follow-up" aria-label="Follow-up" [minRows]="3" [maxRows]="3" [ngModel]="item().form.followUp" [ngModelOptions]="{standalone:true}" (ngModelChange)="formChange.emit({followUp:$event})"></textarea></aura-form-field>
         </div>
       }
       @if (error()) { <p class="case-validation" role="alert">{{ error() }}</p> }
