@@ -25,16 +25,21 @@ export class CasePanel {
   readonly waiting = computed(() => ['Waiting for documents', 'Waiting for clarification'].includes(this.item().status));
   readonly finished = computed(() => ['Closed', 'Escalated'].includes(this.item().status));
   readonly escalating = computed(() => isEscalation(this.item().form));
-  readonly options = computed(() => this.item().status === 'Client didn’t provide documents' ? [
-    { value: 'not-suspicious' as Decision, label: 'Client is no longer suspicious' },
-    { value: 'edd2' as Decision, label: 'Request another documents (EDD-2)' },
-    { value: 'escalate' as Decision, label: 'Escalate case' },
-  ] : [
+  readonly documentsCheck = computed(() => this.item().status === 'Documents check');
+  readonly documentChoices = [
+    { value: 'provided' as const, label: 'Client provided documents' },
+    { value: 'missing' as const, label: 'No documents from the client' },
+  ];
+  readonly options = computed(() => [
     { value: 'not-suspicious' as Decision, label: 'Client is no longer suspicious' },
     { value: 'clarification' as Decision, label: 'Request client’s clarification' },
     { value: 'edd2' as Decision, label: 'Request additional documents (EDD-2)' },
     { value: 'escalate' as Decision, label: 'Escalate case' },
   ]);
+  readonly hint = computed(() => this.documentsCheck() && this.item().form.documents === 'missing'
+    ? 'Send the reminder via CRM chat'
+    : this.documentsCheck() && this.item().form.decision === 'clarification'
+      ? 'Ask the client for clarification via CRM chat' : '');
   readonly buttonLabel = computed(() => {
     const item = this.item();
     if (this.requesting()) return 'Request documents';

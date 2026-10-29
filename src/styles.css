@@ -173,3 +173,6 @@ aml-case-panel { display: flex; flex-direction: column; gap: 4px; width: 100%; b
 .request-placeholder { height: 160px; margin: 0 20px; display: flex; align-items: center; justify-content: center; background: var(--color-bg-base); color: var(--color-tig-neutral-secondary); border-block: 1px dashed var(--color-border-neutral-subtle, #d8dbe5); text-align: center; font-style: italic; }
 .case-outcome { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
 .outcome-followup { white-space: pre-wrap; }
+
+.case-info { display: flex; align-items: center; gap: 8px; padding: 16px; border-radius: 12px; background: var(--color-bg-accent-tertiary); font-size: 15px; line-height: 20px; }
+.case-info-icon { flex: none; width: 20px; height: 20px; background: var(--color-tig-accent-primary, #2663ff); mask: url('../public/assets/7160-35977-imgStrokeInfoCircle.svg') center / 20px 20px no-repeat; }

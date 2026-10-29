@@ -21,8 +21,8 @@ test('Starting EDD-1 keeps case identity and profile, without changing other cas
   assert.equal(result.edd, 1);
   assert.equal(result.lastFollowUp, 'Verify source of funds');
   assert.deepEqual(result.form.checks, [false,false]);
-  assert.equal(cases[1].status,'Documents review');
-  assert.equal(cases[2].status,'Client didn’t provide documents');
+  assert.equal(cases[1].status,'Documents check');
+  assert.equal(cases.length,2);
 });
 test('Incomplete review and missing escalation recipient cannot advance a case', () => {
   const item = createCases()[0];
@@ -38,26 +38,30 @@ test('False positive closes the initial case; escalation retains the intended re
   assert.equal(result.status,'Escalated'); assert.equal(result.resolution,'Escalated to Compliance officer');
 });
 test('Documents review supports closure, clarification, EDD-2, and escalation', () => {
-  const item = createCases()[1];
+  const item = ready(createCases()[1], {documents:'provided'});
   assert.equal(advanceCase(ready(item,{decision:'not-suspicious'})).status,'Closed');
   assert.equal(advanceCase(ready(item,{decision:'clarification'})).status,'Waiting for clarification');
   const edd2 = advanceCase(ready(item,{decision:'edd2'}));
   assert.equal(edd2.status,'Documents request'); assert.equal(edd2.edd,2);
   assert.equal(advanceCase(ready(item,{decision:'escalate',escalateTo:'Manager'})).status,'Escalated');
 });
-test('Missing documents does not offer clarification; requests await client documents', () => {
-  const item = createCases()[2];
-  assert.ok(validationError(ready(item,{decision:'clarification'})));
-  assert.equal(advanceCase(ready(item,{decision:'not-suspicious'})).status,'Closed');
-  const request = advanceCase(ready(item,{decision:'edd2'}));
+test('Documents check requires a document choice and records a reminder for missing documents', () => {
+  const item = createCases()[1];
+  assert.match(validationError(ready(item,{})), /whether the client provided/);
+  assert.ok(validationError(ready(item,{documents:'provided'})));
+  const missing = ready(item,{documents:'missing',followUp:'Reminder sent via CRM chat'});
+  const result = advanceCase(missing);
+  assert.equal(result.id,item.id);
+  assert.equal(result.status,'Waiting for documents');
+  assert.equal(result.lastFollowUp,'Reminder sent via CRM chat');
+  assert.ok(validationError(ready(item,{documents:'missing',decision:'clarification'})));
+  const request = advanceCase(ready(item,{documents:'provided',decision:'edd2'}));
   assert.equal(advanceCase(ready(request,{})).status,'Waiting for documents');
 });
-test('The three cases have separate clients and drafts', () => {
+test('The two cases have separate clients and drafts', () => {
   const cases = createCases();
-  assert.equal(new Set(cases.map(item=>item.profile.companyId)).size,3);
+  assert.equal(new Set(cases.map(item=>item.profile.companyId)).size,2);
   cases[0].form.checks[0]=true;
   assert.equal(cases[1].form.checks[0],false);
-  assert.equal(cases[2].form.checks[0],false);
   assert.equal(cases[1].profile.supportingDocuments.length,3);
-  assert.equal(cases[2].profile.supportingDocuments.length,0);
 });

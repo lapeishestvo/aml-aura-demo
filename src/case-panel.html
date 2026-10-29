@@ -21,8 +21,8 @@
         <h3 class="decision-title">Decision</h3>
         <div class="decision-fields">
           @if (initial()) {
-            <div class="control-group horizontal" role="radiogroup" aria-label="Decision">
-              @for (option of [{value: 'true-positive', label: 'True positive'}, {value: 'false-positive', label: 'False positive'}]; track option.value) {
+            <div class="control-group vertical" role="radiogroup" aria-label="Decision">
+              @for (option of [{value: 'true-positive', label: 'Potentially true positive'}, {value: 'false-positive', label: 'False positive'}]; track option.value) {
                 <label auraCell size="m" class="action-control" twClass="outline-none" [attr.data-selected]="item().form.decision === option.value ? '' : null">
                   <span auraCellStart><input auraRadioButton size="m" type="radio" name="decision" [value]="option.value" [checked]="item().form.decision === option.value" (change)="changeDecision($any(option.value))"></span>
                   <span auraCellText><span auraCellTextLine><span auraCellTitle>{{ option.label }}</span></span></span>
@@ -30,7 +30,7 @@
               }
             </div>
             @if (item().form.decision === 'true-positive') {
-              <div class="control-group horizontal" role="radiogroup" aria-label="Next action">
+              <div class="control-group vertical" role="radiogroup" aria-label="Next action">
                 @for (option of [{value:'edd1',label:'Start EDD-1'}, {value:'escalate',label:'Escalate'}]; track option.value) {
                   <label auraCell size="m" class="action-control" twClass="outline-none" [attr.data-selected]="item().form.next === option.value ? '' : null">
                     <span auraCellStart><input auraRadioButton size="m" type="radio" name="next-action" [value]="option.value" [checked]="item().form.next === option.value" (change)="formChange.emit({next: $any(option.value), escalateTo: ''})"></span>
@@ -40,6 +40,15 @@
               </div>
             }
           } @else {
+            <div class="control-group vertical" role="radiogroup" aria-label="Client documents">
+              @for (option of documentChoices; track option.value) {
+                <label auraCell size="m" class="action-control" twClass="outline-none" [attr.data-selected]="item().form.documents === option.value ? '' : null">
+                  <span auraCellStart><input auraRadioButton size="m" type="radio" name="client-documents" [value]="option.value" [checked]="item().form.documents === option.value" (change)="formChange.emit({documents: option.value, decision: '', next: '', escalateTo: ''})"></span>
+                  <span auraCellText><span auraCellTextLine><span auraCellTitle>{{ option.label }}</span></span></span>
+                </label>
+              }
+            </div>
+            @if (item().form.documents === 'provided') {
             <div class="control-group vertical" role="radiogroup" aria-label="Decision">
               @for (option of options(); track option.value) {
                 <label auraCell size="m" class="action-control" twClass="outline-none" [attr.data-selected]="item().form.decision === option.value ? '' : null">
@@ -49,6 +58,8 @@
               }
             </div>
           }
+          }
+          @if (hint()) { <div class="case-info" role="note"><span class="case-info-icon" aria-hidden="true"></span><span>{{ hint() }}</span></div> }
           @if (escalating()) {
             <aura-form-field size="m" surface="primary"><aura-select>
               <aura-select-form-field-trigger placeholder="Escalate to" aria-label="Escalate to" [ngModel]="item().form.escalateTo" [ngModelOptions]="{standalone:true}" (ngModelChange)="formChange.emit({escalateTo:$event})" />
