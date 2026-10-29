@@ -1,7 +1,8 @@
 <div class="crm-shell">
-  <aml-global-sidebar />
+  <aml-global-sidebar [role]="role()" (roleChange)="selectRole($event)" />
+  @if (currentCase(); as selectedCase) {
   <nav class="case-switcher" aria-label="Cases">
-    @for (item of cases(); track item.id) {
+    @for (item of visibleCases(); track item.id) {
       <button type="button" class="case-card" [class.current]="selectedCaseId() === item.id" [attr.aria-current]="selectedCaseId() === item.id ? 'true' : null" (click)="selectCase(item.id)"><span class="case-card-title">{{ item.profile.company }}</span><span class="case-card-status">{{ item.status }}@if (item.edd) { · EDD-{{ item.edd }} }</span></button>
     }
   </nav>
@@ -9,8 +10,8 @@
   <div class="layout">
     <section class="client-island" [class.short-page]="active() !== 'company-profile'" aria-label="Company profile">
       <header class="client-header">
-        <div><h1>{{ profile().company }}</h1><p>Persona Moral</p></div>
-        <span auraBadge [appearance]="profile().risk === 'High' ? 'error' : (profile().risk === 'Low' ? 'success' : 'warning')" surface="secondary" size="m">{{ profile().risk }} risk level</span>
+        <div><h1>{{ selectedCase.profile.company }}</h1><p>Persona Moral</p></div>
+        <span auraBadge [appearance]="selectedCase.profile.risk === 'High' ? 'error' : (selectedCase.profile.risk === 'Low' ? 'success' : 'warning')" surface="secondary" size="m">{{ selectedCase.profile.risk }} risk level</span>
       </header>
       <nav class="navigation" aria-label="Company sections">
         @for (item of navigation; track item.id) {
@@ -30,37 +31,46 @@
             }
           </dl></section>
           <section class="info-section"><h3>Plata info</h3><dl class="fields">
-            <div class="field-row"><dt>Company ID</dt><dd><button class="copy-id" type="button" (click)="copyId()" [attr.aria-label]="copied() ? 'Company ID copied' : 'Copy company ID'">{{ profile().companyId }} <img src="assets/7160-35683-imgStrokeCopy.svg" width="20" height="20" alt=""></button>@if (copied()) { <span class="copy-status" role="status">Copied</span> }</dd></div>
+            <div class="field-row"><dt>Company ID</dt><dd><button class="copy-id" type="button" (click)="copyId()" [attr.aria-label]="copied() ? 'Company ID copied' : 'Copy company ID'">{{ selectedCase.profile.companyId }} <img src="assets/7160-35683-imgStrokeCopy.svg" width="20" height="20" alt=""></button>@if (copied()) { <span class="copy-status" role="status">Copied</span> }</dd></div>
             <div class="field-row"><dt>Client status</dt><dd>Active</dd></div>
-            <div class="field-row"><dt>Registered in Plata</dt><dd>{{ profile().registered }}</dd></div>
+            <div class="field-row"><dt>Registered in Plata</dt><dd>{{ selectedCase.profile.registered }}</dd></div>
           </dl></section>
           <section class="info-section"><h3>Adresses</h3><dl class="fields">
             @for (label of addressLabels; track label) {
-              <div class="field-row"><dt>{{ label }}</dt><dd>{{ profile().address }}@if (label === 'Primary') { <span auraBadge appearance="success" surface="tertiary" size="s"><img src="assets/7160-35708-imgStrokeCheckBig.svg" width="12" height="12" alt="">Verified</span> }</dd></div>
+              <div class="field-row"><dt>{{ label }}</dt><dd>{{ selectedCase.profile.address }}@if (label === 'Primary') { <span auraBadge appearance="success" surface="tertiary" size="s"><img src="assets/7160-35708-imgStrokeCheckBig.svg" width="12" height="12" alt="">Verified</span> }</dd></div>
             }
           </dl></section>
           <section class="info-section"><h3>Contact info</h3><dl class="fields">
-            <div class="field-row"><dt>Website</dt><dd><a [href]="'https://' + profile().website" target="_blank" rel="noopener">{{ profile().website }}</a></dd></div>
-            <div class="field-row"><dt>Phone</dt><dd>{{ profile().phone }}</dd></div>
-            <div class="field-row"><dt>Email</dt><dd>{{ profile().email }}</dd></div>
+            <div class="field-row"><dt>Website</dt><dd><a [href]="'https://' + selectedCase.profile.website" target="_blank" rel="noopener">{{ selectedCase.profile.website }}</a></dd></div>
+            <div class="field-row"><dt>Phone</dt><dd>{{ selectedCase.profile.phone }}</dd></div>
+            <div class="field-row"><dt>Email</dt><dd>{{ selectedCase.profile.email }}</dd></div>
           </dl></section>
-          <section class="info-section"><h3>Shareholders</h3><aml-people [people]="profile().shareholders" assetPrefix="7160-35971" /></section>
-          <section class="info-section"><h3>UBO</h3><aml-people [people]="profile().ubo" assetPrefix="7160-35977" /></section>
-          <section class="info-section"><h3>Legal representatives</h3><aml-people [people]="profile().representatives" assetPrefix="7160-35984" /></section>
+          <section class="info-section"><h3>Shareholders</h3><aml-people [people]="selectedCase.profile.shareholders" assetPrefix="7160-35971" /></section>
+          <section class="info-section"><h3>UBO</h3><aml-people [people]="selectedCase.profile.ubo" assetPrefix="7160-35977" /></section>
+          <section class="info-section"><h3>Legal representatives</h3><aml-people [people]="selectedCase.profile.representatives" assetPrefix="7160-35984" /></section>
           <section class="info-section company-check">
             <header class="check-header"><h3>Lexis Nexis check</h3><span auraBadge appearance="success" surface="tertiary" size="m">No match</span><button class="text-link" (click)="reportNotice.set(true)">Open check in Lexis Nexis <img src="assets/7168-37907-imgRightIcon.svg" width="16" height="16" alt=""></button></header>
             <aml-check-details />
             @if (reportNotice()) { <p class="demo-notice report-notice" role="status">The external report is not connected in this demo.</p> }
           </section>
-        } @else if (active() === 'documents') { <aml-documents [supportingDocuments]="profile().supportingDocuments" />
-        } @else if (active() === 'products') { <aml-products [businessAccounts]="profile().accounts" [apartadoAccounts]="profile().apartado" />
+        } @else if (active() === 'documents') { <aml-documents [supportingDocuments]="selectedCase.profile.supportingDocuments" />
+        } @else if (active() === 'products') { <aml-products [businessAccounts]="selectedCase.profile.accounts" [apartadoAccounts]="selectedCase.profile.apartado" />
         } @else if (active() === 'risk-matrix') { <aml-risk-matrix />
         } @else if (active() === 'transactional-profile') { <aml-transactional-profile />
         } @else { <div class="workspace-tile"></div> }
       </section>
     </section>
-    <aside class="case-island" aria-label="Case panel"><aml-case-panel [item]="currentCase()" [error]="panelError()" (formChange)="updateForm($event)" (submitted)="submitCase()" /></aside>
+    <aside class="case-island" aria-label="Case panel"><aml-case-panel [item]="selectedCase" [error]="panelError()" (formChange)="updateForm($event)" (submitted)="submitCase()" /></aside>
   </div>
 </main>
+
+  } @else {
+    <main class="case-empty" aria-label="No cases" role="status">
+      <div class="case-empty-content"><div class="case-empty-circle" aria-hidden="true"></div>
+        <div class="case-empty-heading"><h1>Take a deep breath</h1><p>Today working time 4h 32min</p></div>
+      </div>
+    </main>
+    <aside class="empty-right-rail" aria-hidden="true"><span class="notification-counter">1</span><img src="assets/sidebar-status-collapsed.svg" width="24" height="24" alt=""></aside>
+  }
 
 </div>

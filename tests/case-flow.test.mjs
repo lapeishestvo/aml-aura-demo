@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 const output = mkdtempSync(join(tmpdir(), 'aml-case-flow-'));
 execFileSync(resolve('node_modules/.bin/tsc'), ['src/case-model.ts','--outDir',output,'--target','ES2022','--module','commonjs','--skipLibCheck']);
-const { createCases, advanceCase, validationError } = createRequire(import.meta.url)(join(output, 'case-model.js'));
+const { createCases, createManagerCase, casesForRole, advanceCase, validationError } = createRequire(import.meta.url)(join(output, 'case-model.js'));
 process.on('exit', () => rmSync(output, { recursive:true, force:true }));
 const ready = (item, patch) => ({ ...item, form: { ...item.form, checks: [true,true], ...patch } });
 
@@ -82,4 +82,39 @@ test('EDD-3 sends provided documents directly to compliance and retains the case
   assert.equal(advanceCase(ready(item,{documents:'missing'})).status,'Waiting for documents');
   assert.ok(validationError(ready(item,{documents:'provided',decision:'edd2'})));
   assert.equal(createCases()[1].edd,1);
+});
+
+for (const [decision, status, resolution] of [
+  ['de-escalate', 'De-escalated', 'De-escalated to the analyst'],
+  ['escalate-compliance', 'Escalated', 'Escalated to the compliance officer'],
+]) {
+  test(`Manager ${decision} clears only the manager queue and retains follow-up`, () => {
+    const analysts = createCases();
+    const manager = ready(createManagerCase(), {decision, followUp:'Please verify the findings'});
+    const items = [...analysts, manager];
+    const completed = advanceCase(manager);
+    assert.equal(completed.status,status);
+    assert.equal(completed.resolution,resolution);
+    assert.equal(completed.lastFollowUp,'Please verify the findings');
+    assert.equal(completed.id,manager.id);
+    const updated = items.map(item => item.id === completed.id ? completed : item);
+    assert.deepEqual(casesForRole(updated,'Manager'),[]);
+    assert.deepEqual(casesForRole(updated,'Analyst'),analysts);
+    // Switching away and back cannot resurrect a completed manager case.
+    assert.deepEqual(casesForRole(updated,'Compliance officer'),[]);
+    assert.deepEqual(casesForRole(updated,'Manager'),[]);
+    assert.equal(advanceCase(completed),completed);
+  });
+}
+test('Manager queue requires both checklist items and one valid decision', () => {
+  const manager = createManagerCase();
+  const items = [...createCases(),manager];
+  assert.deepEqual(casesForRole(items,'Manager'),[manager]);
+  assert.equal(casesForRole(items,'Analyst').length,3);
+  assert.ok(validationError(manager));
+  assert.equal(advanceCase(manager),manager);
+  assert.ok(validationError(ready(manager,{})));
+  assert.ok(validationError(ready(manager,{decision:'edd2'})));
+  assert.ok(validationError({...ready(manager,{decision:'de-escalate'}),form:{...manager.form,checks:[true,false],decision:'de-escalate'}}));
+  assert.equal(validationError(ready(manager,{decision:'escalate-compliance'})),'');
 });

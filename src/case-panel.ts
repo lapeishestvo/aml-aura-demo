@@ -20,10 +20,15 @@ export class CasePanel {
   readonly error = input('');
   readonly formChange = output<Partial<ReviewForm>>();
   readonly submitted = output<void>();
+  readonly manager = computed(() => this.item().status === 'Manager review');
+  readonly managerChoices = [
+    {value: 'de-escalate' as Decision, label: 'De-escalate to the analyst'},
+    {value: 'escalate-compliance' as Decision, label: 'Escalate to the compliance officer'},
+  ];
   readonly initial = computed(() => this.item().status === 'Initial review');
   readonly requesting = computed(() => this.item().status === 'Documents request');
   readonly waiting = computed(() => ['Waiting for documents', 'Waiting for clarification'].includes(this.item().status));
-  readonly finished = computed(() => ['Closed', 'Escalated'].includes(this.item().status));
+  readonly finished = computed(() => ['Closed', 'Escalated', 'De-escalated'].includes(this.item().status));
   readonly escalating = computed(() => isEscalation(this.item().form));
   readonly documentsCheck = computed(() => this.item().status === 'Documents check');
   readonly finalDocumentsCheck = computed(() => this.documentsCheck() && this.item().edd === 3);
@@ -45,6 +50,7 @@ export class CasePanel {
       ? 'Ask the client for clarification via CRM chat' : '');
   readonly buttonLabel = computed(() => {
     const item = this.item();
+    if (this.manager()) return item.form.decision === 'de-escalate' ? 'De-escalate case' : item.form.decision === 'escalate-compliance' ? 'Escalate case' : 'Continue';
     if (this.finalDocumentsCheck() && item.form.documents === 'provided') return 'Send case to the compliance officer';
     if (this.requesting()) return 'Request documents';
     if (this.escalating()) return 'Escalate case';

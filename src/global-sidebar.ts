@@ -1,4 +1,5 @@
-import { Component, signal } from '@angular/core';
+import { Component, model } from '@angular/core';
+import { reviewRoles, type ReviewRole } from './case-model';
 import { FormsModule } from '@angular/forms';
 import { AuraFormFieldComponents } from '@aura-ng/form-field-v2';
 import { AuraSelectComponents } from '@aura-ng/select-v2';
@@ -33,6 +34,6 @@ import { AuraListboxComponents } from '@aura-ng/listbox';
   `,
 })
 export class GlobalSidebar {
-  readonly role = signal('Analyst');
-  readonly roles = ['Analyst', 'Manager', 'Compliance officer', 'CCC'];
+  readonly role = model<ReviewRole>('Analyst');
+  readonly roles = reviewRoles;
 }

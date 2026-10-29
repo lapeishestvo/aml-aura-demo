@@ -2,7 +2,7 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { CasePanel } from './case-panel';
 import { GlobalSidebar } from './global-sidebar';
-import { createCases, advanceCase, validationError, type Person, type ReviewForm } from './case-model';
+import { createCases, createManagerCase, casesForRole, advanceCase, validationError, type ReviewRole, type Person, type ReviewForm } from './case-model';
 import { DocumentsPage } from './documents';
 import { ProductsPage } from './products';
 import { TransactionalProfilePage } from './transactional-profile';
@@ -90,10 +90,12 @@ class PeopleList {
 })
 class AmlApp {
   readonly active = signal('case');
-  readonly cases = signal(createCases());
+  readonly role = signal<ReviewRole>('Analyst');
+  readonly cases = signal([...createCases(), createManagerCase()]);
+  readonly visibleCases = computed(() => casesForRole(this.cases(), this.role()));
   readonly selectedCaseId = signal('AML-2026-001');
-  readonly currentCase = computed(() => this.cases().find(item => item.id === this.selectedCaseId())!);
-  readonly profile = computed(() => this.currentCase().profile);
+  readonly currentCase = computed(() => this.visibleCases().find(item => item.id === this.selectedCaseId()) ?? this.visibleCases()[0]);
+  readonly profile = computed(() => this.currentCase()?.profile);
   readonly copied = signal(false);
   readonly reportNotice = signal(false);
   readonly panelError = signal('');
@@ -105,6 +107,7 @@ class AmlApp {
   ];
   readonly mainInfo = computed(() => {
     const p = this.profile();
+    if (!p) return [];
     return [
       { label: 'Legal name', value: p.legalName }, { label: 'Trade name', value: p.company },
       { label: 'Company type', value: 'Persona Moral' }, { label: 'Legal form', value: p.legalName.includes('S. de R.L.') ? 'Sociedad de Responsabilidad Limitada de Capital Variable' : 'Sociedad Anónima de Capital Variable (S.A. de C.V.)' },
@@ -114,6 +117,11 @@ class AmlApp {
     ];
   });
   readonly addressLabels = ['Primary', 'Legal', 'Inegi'];
+  selectRole(role: ReviewRole): void {
+    this.role.set(role);
+    this.selectCase(this.visibleCases()[0]?.id ?? '');
+    this.active.set('case');
+  }
   selectCase(id: string): void { this.selectedCaseId.set(id); this.panelError.set(''); this.copied.set(false); this.reportNotice.set(false); }
   updateForm(patch: Partial<ReviewForm>): void {
     this.cases.update(items => items.map(item => item.id === this.selectedCaseId() ? { ...item, form: { ...item.form, ...patch } } : item));
@@ -121,13 +129,16 @@ class AmlApp {
   }
   submitCase(): void {
     const item = this.currentCase();
+    if (!item) return;
     const error = validationError(item);
     this.panelError.set(error);
     if (!error) this.cases.update(items => items.map(candidate => candidate.id === item.id ? advanceCase(candidate) : candidate));
   }
   select(event: MouseEvent, id: string): void { event.preventDefault(); this.active.set(id); }
   async copyId(): Promise<void> {
-    try { await navigator.clipboard.writeText(this.profile().companyId); this.copied.set(true); setTimeout(() => this.copied.set(false), 2000); }
+    const id = this.profile()?.companyId;
+    if (!id) return;
+    try { await navigator.clipboard.writeText(id); this.copied.set(true); setTimeout(() => this.copied.set(false), 2000); }
     catch { this.copied.set(false); }
   }
 }
