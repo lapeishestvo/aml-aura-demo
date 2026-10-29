@@ -2,7 +2,7 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { CasePanel } from './case-panel';
 import { GlobalSidebar } from './global-sidebar';
-import { createCases, createManagerCase, createComplianceCase, casesForRole, advanceCase, validationError, type ReviewRole, type Person, type ReviewForm } from './case-model';
+import { createCases, createManagerCase, createComplianceCase, createComplianceDocumentsCase, casesForRole, advanceCase, validationError, type ReviewRole, type Person, type ReviewForm } from './case-model';
 import { DocumentsPage } from './documents';
 import { ProductsPage } from './products';
 import { TransactionalProfilePage } from './transactional-profile';
@@ -91,7 +91,7 @@ class PeopleList {
 class AmlApp {
   readonly active = signal('case');
   readonly role = signal<ReviewRole>('Analyst');
-  readonly cases = signal([...createCases(), createManagerCase(), createComplianceCase()]);
+  readonly cases = signal([...createCases(), createManagerCase(), createComplianceCase(), createComplianceDocumentsCase()]);
   readonly visibleCases = computed(() => casesForRole(this.cases(), this.role()));
   readonly selectedCaseId = signal('AML-2026-001');
   readonly currentCase = computed(() => this.visibleCases().find(item => item.id === this.selectedCaseId()) ?? this.visibleCases()[0]);
@@ -124,7 +124,9 @@ class AmlApp {
   }
   selectCase(id: string): void { this.selectedCaseId.set(id); this.panelError.set(''); this.copied.set(false); this.reportNotice.set(false); }
   updateForm(patch: Partial<ReviewForm>): void {
-    this.cases.update(items => items.map(item => item.id === this.selectedCaseId() ? { ...item, form: { ...item.form, ...patch } } : item));
+    const current = this.currentCase();
+    if (!current) return;
+    this.cases.update(items => items.map(item => item.id === current.id ? { ...item, form: { ...item.form, ...patch } } : item));
     this.panelError.set('');
   }
   submitCase(): void {
@@ -132,7 +134,10 @@ class AmlApp {
     if (!item) return;
     const error = validationError(item);
     this.panelError.set(error);
-    if (!error) this.cases.update(items => items.map(candidate => candidate.id === item.id ? advanceCase(candidate) : candidate));
+    if (!error) {
+      this.cases.update(items => items.map(candidate => candidate.id === item.id ? advanceCase(candidate) : candidate));
+      if (!this.visibleCases().some(candidate => candidate.id === this.selectedCaseId())) this.selectCase(this.visibleCases()[0]?.id ?? '');
+    }
   }
   select(event: MouseEvent, id: string): void { event.preventDefault(); this.active.set(id); }
   async copyId(): Promise<void> {

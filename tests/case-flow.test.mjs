@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 const output = mkdtempSync(join(tmpdir(), 'aml-case-flow-'));
 execFileSync(resolve('node_modules/.bin/tsc'), ['src/case-model.ts','--outDir',output,'--target','ES2022','--module','commonjs','--skipLibCheck']);
-const { createCases, createManagerCase, createComplianceCase, casesForRole, advanceCase, validationError } = createRequire(import.meta.url)(join(output, 'case-model.js'));
+const { createCases, createManagerCase, createComplianceCase, createComplianceDocumentsCase, casesForRole, advanceCase, validationError } = createRequire(import.meta.url)(join(output, 'case-model.js'));
 process.on('exit', () => rmSync(output, { recursive:true, force:true }));
 const ready = (item, patch) => ({ ...item, form: { ...item.form, checks: [true,true], ...patch } });
 
@@ -166,5 +166,51 @@ test('Compliance review requires its own decision and complete checklist', () =>
     assert.equal(advanceCase(invalid),invalid);
   }
   assert.deepEqual(casesForRole([item],'Compliance officer'),[item]);
+  assert.equal(validationError(ready(item,{decision:'escalate-ccc'})),'');
+});
+
+test('Compliance has two independent cases and keeps drafts while switching between them', () => {
+  const review = createComplianceCase();
+  const documents = createComplianceDocumentsCase();
+  assert.notEqual(review.id,documents.id);
+  assert.notEqual(review.profile.companyId,documents.profile.companyId);
+  assert.equal(documents.status,'Documents review');
+  assert.equal(documents.edd,3);
+  documents.form.followUp = 'Checked source of funds';
+  documents.form.operationDescription = 'Documented transfer';
+  documents.form.checks[0] = true;
+  assert.equal(review.form.followUp,'');
+  assert.equal(review.form.operationDescription,'');
+  assert.equal(review.form.checks[0],false);
+  assert.equal(documents.profile.supportingDocuments.length,3);
+  assert.deepEqual(casesForRole([review,documents],'Compliance officer'),[review,documents]);
+});
+for (const [decision,status] of [
+  ['not-suspicious','Closed'], ['suspicious-report','Closed'], ['escalate-ccc','Escalated'],
+]) {
+  test(`EDD-3 document review ${decision} removes only that case`, () => {
+    const review = createComplianceCase();
+    review.form.followUp = 'Keep this draft';
+    const documents = createComplianceDocumentsCase();
+    const completed = advanceCase(ready(documents,{decision,followUp:'Document review completed',operationDescription:'Cross-border transfers',suspiciousReason:'Source of funds not confirmed'}));
+    assert.equal(completed.id,documents.id);
+    assert.equal(completed.status,status);
+    assert.equal(completed.edd,3);
+    assert.equal(completed.lastFollowUp,'Document review completed');
+    const remaining = casesForRole([review,completed],'Compliance officer');
+    assert.deepEqual(remaining,[review]);
+    assert.equal(remaining[0].form.followUp,'Keep this draft');
+    if (decision === 'suspicious-report') assert.deepEqual(completed.report,{operationDescription:'Cross-border transfers',suspiciousReason:'Source of funds not confirmed'});
+    const closedReview = advanceCase(ready(review,{decision:'not-suspicious'}));
+    assert.deepEqual(casesForRole([closedReview,completed],'Compliance officer'),[]);
+  });
+}
+test('EDD-3 document review rejects requesting EDD-3 again and requires a complete checklist', () => {
+  const item = createComplianceDocumentsCase();
+  assert.ok(validationError(item));
+  assert.ok(validationError(ready(item,{})));
+  const invalid = ready(item,{decision:'edd3'});
+  assert.ok(validationError(invalid));
+  assert.equal(advanceCase(invalid),invalid);
   assert.equal(validationError(ready(item,{decision:'escalate-ccc'})),'');
 });

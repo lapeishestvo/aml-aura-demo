@@ -1,6 +1,6 @@
 export const reviewRoles = ['Analyst', 'Manager', 'Compliance officer', 'CCC'] as const;
 export type ReviewRole = typeof reviewRoles[number];
-export type CaseStatus = 'Compliance officer review' | 'Manager review' | 'De-escalated' | 'Initial review' | 'Documents request' | 'Documents check' | 'Waiting for documents' | 'Waiting for clarification' | 'Closed' | 'Escalated';
+export type CaseStatus = 'Documents review' | 'Compliance officer review' | 'Manager review' | 'De-escalated' | 'Initial review' | 'Documents request' | 'Documents check' | 'Waiting for documents' | 'Waiting for clarification' | 'Closed' | 'Escalated';
 export type Decision = '' | 'true-positive' | 'false-positive' | 'not-suspicious' | 'clarification' | 'edd2' | 'escalate' | 'de-escalate' | 'escalate-compliance' | 'edd3' | 'suspicious-report' | 'escalate-ccc';
 export interface ReviewForm { checks: boolean[]; decision: Decision; next: '' | 'edd1' | 'escalate'; documents: '' | 'provided' | 'missing'; escalateTo: string; followUp: string; operationDescription: string; suspiciousReason: string; }
 export interface Person { name: string; description: string; match: boolean; shares?: string; }
@@ -12,7 +12,10 @@ export function isEscalation(form: ReviewForm): boolean { return form.decision =
 export function validationError(item: ReviewCase): string {
   if (['Closed', 'Escalated', 'De-escalated', 'Waiting for documents', 'Waiting for clarification'].includes(item.status)) return 'This case is not awaiting an analyst action.';
   if (!item.form.checks.every(Boolean)) return 'Complete both checklist items before continuing.';
-  if (item.status === 'Compliance officer review') return ['not-suspicious', 'edd3', 'suspicious-report', 'escalate-ccc'].includes(item.form.decision) ? '' : 'Select how to proceed with the case.';
+  if (item.role === 'Compliance officer' && ['Compliance officer review', 'Documents review'].includes(item.status)) {
+    const allowed: Decision[] = item.status === 'Documents review' ? ['not-suspicious', 'suspicious-report', 'escalate-ccc'] : ['not-suspicious', 'edd3', 'suspicious-report', 'escalate-ccc'];
+    return allowed.includes(item.form.decision) ? '' : 'Select how to proceed with the case.';
+  }
   if (item.status === 'Manager review') return ['de-escalate', 'escalate-compliance'].includes(item.form.decision) ? '' : 'Select how to proceed with the case.';
   if (item.status === 'Documents request') return '';
   if (item.status === 'Documents check') {
@@ -33,7 +36,7 @@ export function advanceCase(item: ReviewCase): ReviewCase {
   let edd = item.edd;
   let resolution = '';
   let report = item.report;
-  if (item.status === 'Compliance officer review') {
+  if (item.role === 'Compliance officer' && ['Compliance officer review', 'Documents review'].includes(item.status)) {
     if (form.decision === 'edd3') { status = 'Documents request'; edd = 3; }
     else if (form.decision === 'escalate-ccc') { status = 'Escalated'; resolution = 'Escalated to the CCC'; }
     else {
@@ -89,11 +92,15 @@ export function createComplianceCase(): ReviewCase {
   return { id: 'AML-COMPLIANCE-001', role: 'Compliance officer', status: 'Compliance officer review', edd: 0, profile: createCases()[2].profile, form: emptyForm() };
 }
 
+export function createComplianceDocumentsCase(): ReviewCase {
+  return { id: 'AML-COMPLIANCE-002', role: 'Compliance officer', status: 'Documents review', edd: 3, profile: createCases()[1].profile, form: emptyForm() };
+}
+
 export function casesForRole(items: ReviewCase[], role: ReviewRole): ReviewCase[] {
   return items.filter(item => {
     if (item.role !== role) return false;
     if (role === 'Manager') return item.status === 'Manager review';
-    if (role === 'Compliance officer') return item.status === 'Compliance officer review' || (item.status === 'Documents request' && item.edd === 3);
+    if (role === 'Compliance officer') return item.status === 'Compliance officer review' || (['Documents request', 'Documents review'].includes(item.status) && item.edd === 3);
     return true;
   });
 }

@@ -20,15 +20,16 @@ export class CasePanel {
   readonly error = input('');
   readonly formChange = output<Partial<ReviewForm>>();
   readonly submitted = output<void>();
-  readonly compliance = computed(() => this.item().status === 'Compliance officer review');
+  readonly complianceDocumentsReview = computed(() => this.item().role === 'Compliance officer' && this.item().status === 'Documents review');
+  readonly compliance = computed(() => this.item().status === 'Compliance officer review' || this.complianceDocumentsReview());
   readonly reporting = computed(() => this.compliance() && this.item().form.decision === 'suspicious-report');
-  readonly complianceChoices = [
+  readonly complianceChoices = computed(() => [
     {value: 'not-suspicious' as Decision, label: 'Client is no longer suspicious'},
-    {value: 'edd3' as Decision, label: 'Request additional documents (EDD-3)'},
+    ...this.complianceDocumentsReview() ? [] : [{value: 'edd3' as Decision, label: 'Request additional documents (EDD-3)'}],
     {value: 'suspicious-report' as Decision, label: 'Close case as suspicious and report'},
-    {value: 'escalate-ccc' as Decision, label: 'Escalate to the CCC'},
-  ];
-  readonly reviewChoices = computed(() => this.compliance() ? this.complianceChoices : this.managerChoices);
+    {value: 'escalate-ccc' as Decision, label: this.complianceDocumentsReview() ? 'Escalate case to CCC' : 'Escalate to the CCC'},
+  ]);
+  readonly reviewChoices = computed(() => this.compliance() ? this.complianceChoices() : this.managerChoices);
   readonly manager = computed(() => this.item().status === 'Manager review');
   readonly managerChoices = [
     {value: 'de-escalate' as Decision, label: 'De-escalate to the analyst'},
@@ -62,7 +63,7 @@ export class CasePanel {
     if (this.compliance()) {
       if (item.form.decision === 'not-suspicious') return 'Close case';
       if (item.form.decision === 'edd3') return 'Start EDD3';
-      if (item.form.decision === 'suspicious-report') return 'Close and report';
+      if (item.form.decision === 'suspicious-report') return this.complianceDocumentsReview() ? 'Close case' : 'Close and report';
       if (item.form.decision === 'escalate-ccc') return 'Escalate case';
       return 'Continue';
     }

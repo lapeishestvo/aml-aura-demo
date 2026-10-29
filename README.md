@@ -34,7 +34,7 @@ The build uses `/aml-aura-demo/` as its base URL and includes local icons and fo
 
 - Three independent cases (Initial review, Documents check EDD-1 and EDD-3) with a left case switcher and status-based action panels.
 - Manager role with a dedicated review case; either confirmed handoff clears the manager queue and shows the empty state.
-- Compliance officer role with four decisions; EDD-3 keeps the same case in Documents request, other decisions clear the queue.
+- Compliance officer has two independent cases: officer review and Documents review EDD-3. The review has four decisions; EDD-3 keeps the same case in Documents request, other decisions clear the queue.
 - Company profile with people and Lexis Nexis detail modals.
 - Documents page; actual document files are not attached.
 - Products with collapsible groups, additional account rows and ID copying.
