@@ -22,7 +22,7 @@ test('Starting EDD-1 keeps case identity and profile, without changing other cas
   assert.equal(result.lastFollowUp, 'Verify source of funds');
   assert.deepEqual(result.form.checks, [false,false]);
   assert.equal(cases[1].status,'Documents check');
-  assert.equal(cases.length,2);
+  assert.equal(cases.length,3);
 });
 test('Incomplete review and missing escalation recipient cannot advance a case', () => {
   const item = createCases()[0];
@@ -58,10 +58,28 @@ test('Documents check requires a document choice and records a reminder for miss
   const request = advanceCase(ready(item,{documents:'provided',decision:'edd2'}));
   assert.equal(advanceCase(ready(request,{})).status,'Waiting for documents');
 });
-test('The two cases have separate clients and drafts', () => {
+test('The three cases have separate clients and drafts', () => {
   const cases = createCases();
-  assert.equal(new Set(cases.map(item=>item.profile.companyId)).size,2);
+  assert.equal(new Set(cases.map(item=>item.profile.companyId)).size,3);
   cases[0].form.checks[0]=true;
   assert.equal(cases[1].form.checks[0],false);
   assert.equal(cases[1].profile.supportingDocuments.length,3);
+});
+
+test('EDD-3 sends provided documents directly to compliance and retains the case identity', () => {
+  const item = createCases()[2];
+  assert.equal(item.edd,3);
+  assert.ok(validationError(ready(item,{})));
+  const provided = ready(item,{documents:'provided',followUp:'Documents attached to the case'});
+  assert.equal(validationError(provided),'');
+  const result = advanceCase(provided);
+  assert.equal(result.id,item.id);
+  assert.equal(result.profile,item.profile);
+  assert.equal(result.edd,3);
+  assert.equal(result.status,'Escalated');
+  assert.equal(result.resolution,'Sent to the compliance officer');
+  assert.equal(result.lastFollowUp,'Documents attached to the case');
+  assert.equal(advanceCase(ready(item,{documents:'missing'})).status,'Waiting for documents');
+  assert.ok(validationError(ready(item,{documents:'provided',decision:'edd2'})));
+  assert.equal(createCases()[1].edd,1);
 });

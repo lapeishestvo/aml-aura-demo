@@ -26,6 +26,7 @@ export class CasePanel {
   readonly finished = computed(() => ['Closed', 'Escalated'].includes(this.item().status));
   readonly escalating = computed(() => isEscalation(this.item().form));
   readonly documentsCheck = computed(() => this.item().status === 'Documents check');
+  readonly finalDocumentsCheck = computed(() => this.documentsCheck() && this.item().edd === 3);
   readonly documentChoices = [
     { value: 'provided' as const, label: 'Client provided documents' },
     { value: 'missing' as const, label: 'No documents from the client' },
@@ -36,12 +37,15 @@ export class CasePanel {
     { value: 'edd2' as Decision, label: 'Request additional documents (EDD-2)' },
     { value: 'escalate' as Decision, label: 'Escalate case' },
   ]);
-  readonly hint = computed(() => this.documentsCheck() && this.item().form.documents === 'missing'
+  readonly hint = computed(() => this.finalDocumentsCheck() && this.item().form.documents === 'provided'
+    ? 'Upload the provided documents in the case and send the case to the compliance officer'
+    : this.documentsCheck() && this.item().form.documents === 'missing'
     ? 'Send the reminder via CRM chat'
     : this.documentsCheck() && this.item().form.decision === 'clarification'
       ? 'Ask the client for clarification via CRM chat' : '');
   readonly buttonLabel = computed(() => {
     const item = this.item();
+    if (this.finalDocumentsCheck() && item.form.documents === 'provided') return 'Send case to the compliance officer';
     if (this.requesting()) return 'Request documents';
     if (this.escalating()) return 'Escalate case';
     if (item.form.decision === 'false-positive' || item.form.decision === 'not-suspicious') return 'Close case';

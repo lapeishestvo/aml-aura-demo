@@ -1,7 +1,7 @@
 <div class="crm-shell">
   <nav class="case-switcher" aria-label="Cases">
     @for (item of cases(); track item.id) {
-      <button type="button" class="case-card" [class.current]="selectedCaseId() === item.id" [attr.aria-current]="selectedCaseId() === item.id ? 'true' : null" (click)="selectCase(item.id)"><span class="case-card-title">{{ item.profile.company }}</span><span class="case-card-status">{{ item.status }}</span></button>
+      <button type="button" class="case-card" [class.current]="selectedCaseId() === item.id" [attr.aria-current]="selectedCaseId() === item.id ? 'true' : null" (click)="selectCase(item.id)"><span class="case-card-title">{{ item.profile.company }}</span><span class="case-card-status">{{ item.status }}@if (item.edd) { · EDD-{{ item.edd }} }</span></button>
     }
   </nav>
 <main class="screen" aria-label="AML case review" data-node-id="7160:35642">
