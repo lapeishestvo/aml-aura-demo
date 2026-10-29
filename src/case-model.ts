@@ -109,6 +109,7 @@ export function createCccCase(): ReviewCase {
 export function casesForRole(items: ReviewCase[], role: ReviewRole): ReviewCase[] {
   return items.filter(item => {
     if (item.role !== role) return false;
+    if (role === 'Analyst') return !['Closed', 'Escalated', 'De-escalated', 'Waiting for documents', 'Waiting for clarification'].includes(item.status);
     if (role === 'CCC') return item.status === 'CCC review';
     if (role === 'Manager') return item.status === 'Manager review';
     if (role === 'Compliance officer') return item.status === 'Compliance officer review' || (['Documents request', 'Documents review'].includes(item.status) && item.edd === 3);

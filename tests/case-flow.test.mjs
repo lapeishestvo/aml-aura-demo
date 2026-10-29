@@ -245,3 +245,41 @@ test('CCC requires its checklist and accepts only its two closure decisions', ()
   assert.equal(validationError(ready(item,{decision:'not-suspicious'})),'');
   assert.equal(validationError(ready(item,{decision:'suspicious-report'})),'');
 });
+
+test('Completing analyst cases removes them in turn and leaves an empty queue', () => {
+  const analyst = createCases();
+  const otherRoles = [createManagerCase(),createComplianceCase(),createComplianceDocumentsCase(),createCccCase()];
+  let items = [...analyst,...otherRoles];
+  const complete = (id,patch) => {
+    items = items.map(item => item.id === id ? advanceCase(ready(item,patch)) : item);
+  };
+  complete(analyst[0].id,{decision:'false-positive'});
+  assert.deepEqual(casesForRole(items,'Analyst').map(item=>item.id),[analyst[1].id,analyst[2].id]);
+  complete(analyst[1].id,{documents:'provided',decision:'clarification'});
+  assert.deepEqual(casesForRole(items,'Analyst').map(item=>item.id),[analyst[2].id]);
+  complete(analyst[2].id,{documents:'provided'});
+  assert.deepEqual(casesForRole(items,'Analyst'),[]);
+  for (const role of ['Manager','Compliance officer','CCC']) assert.deepEqual(casesForRole(items,role),casesForRole(otherRoles,role));
+  // Switching roles does not restore completed analyst cases.
+  assert.deepEqual(casesForRole(items,'Analyst'),[]);
+});
+test('Analyst document requests remain actionable until they are sent', () => {
+  const item = createCases()[0];
+  const request = advanceCase(ready(item,{decision:'true-positive',next:'edd1'}));
+  assert.equal(request.status,'Documents request');
+  assert.deepEqual(casesForRole([request],'Analyst'),[request]);
+  const waiting = advanceCase(ready(request,{}));
+  assert.equal(waiting.status,'Waiting for documents');
+  assert.deepEqual(casesForRole([waiting],'Analyst'),[]);
+  const missing = advanceCase(ready(createCases()[1],{documents:'missing'}));
+  assert.deepEqual(casesForRole([missing],'Analyst'),[]);
+});
+test('Analyst escalation and no-longer-suspicious closure remove the selected case', () => {
+  const cases = createCases();
+  const escalated = advanceCase(ready(cases[0],{decision:'true-positive',next:'escalate',escalateTo:'Manager'}));
+  assert.equal(escalated.status,'Escalated');
+  assert.deepEqual(casesForRole([escalated,...cases.slice(1)],'Analyst'),cases.slice(1));
+  const closed = advanceCase(ready(cases[1],{documents:'provided',decision:'not-suspicious'}));
+  assert.equal(closed.status,'Closed');
+  assert.deepEqual(casesForRole([closed],'Analyst'),[]);
+});
