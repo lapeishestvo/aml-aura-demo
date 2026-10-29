@@ -2,7 +2,7 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { CasePanel } from './case-panel';
 import { GlobalSidebar } from './global-sidebar';
-import { createCases, createManagerCase, casesForRole, advanceCase, validationError, type ReviewRole, type Person, type ReviewForm } from './case-model';
+import { createCases, createManagerCase, createComplianceCase, casesForRole, advanceCase, validationError, type ReviewRole, type Person, type ReviewForm } from './case-model';
 import { DocumentsPage } from './documents';
 import { ProductsPage } from './products';
 import { TransactionalProfilePage } from './transactional-profile';
@@ -91,7 +91,7 @@ class PeopleList {
 class AmlApp {
   readonly active = signal('case');
   readonly role = signal<ReviewRole>('Analyst');
-  readonly cases = signal([...createCases(), createManagerCase()]);
+  readonly cases = signal([...createCases(), createManagerCase(), createComplianceCase()]);
   readonly visibleCases = computed(() => casesForRole(this.cases(), this.role()));
   readonly selectedCaseId = signal('AML-2026-001');
   readonly currentCase = computed(() => this.visibleCases().find(item => item.id === this.selectedCaseId()) ?? this.visibleCases()[0]);

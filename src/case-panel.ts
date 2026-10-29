@@ -20,6 +20,15 @@ export class CasePanel {
   readonly error = input('');
   readonly formChange = output<Partial<ReviewForm>>();
   readonly submitted = output<void>();
+  readonly compliance = computed(() => this.item().status === 'Compliance officer review');
+  readonly reporting = computed(() => this.compliance() && this.item().form.decision === 'suspicious-report');
+  readonly complianceChoices = [
+    {value: 'not-suspicious' as Decision, label: 'Client is no longer suspicious'},
+    {value: 'edd3' as Decision, label: 'Request additional documents (EDD-3)'},
+    {value: 'suspicious-report' as Decision, label: 'Close case as suspicious and report'},
+    {value: 'escalate-ccc' as Decision, label: 'Escalate to the CCC'},
+  ];
+  readonly reviewChoices = computed(() => this.compliance() ? this.complianceChoices : this.managerChoices);
   readonly manager = computed(() => this.item().status === 'Manager review');
   readonly managerChoices = [
     {value: 'de-escalate' as Decision, label: 'De-escalate to the analyst'},
@@ -50,6 +59,13 @@ export class CasePanel {
       ? 'Ask the client for clarification via CRM chat' : '');
   readonly buttonLabel = computed(() => {
     const item = this.item();
+    if (this.compliance()) {
+      if (item.form.decision === 'not-suspicious') return 'Close case';
+      if (item.form.decision === 'edd3') return 'Start EDD3';
+      if (item.form.decision === 'suspicious-report') return 'Close and report';
+      if (item.form.decision === 'escalate-ccc') return 'Escalate case';
+      return 'Continue';
+    }
     if (this.manager()) return item.form.decision === 'de-escalate' ? 'De-escalate case' : item.form.decision === 'escalate-compliance' ? 'Escalate case' : 'Continue';
     if (this.finalDocumentsCheck() && item.form.documents === 'provided') return 'Send case to the compliance officer';
     if (this.requesting()) return 'Request documents';

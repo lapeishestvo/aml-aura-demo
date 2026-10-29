@@ -16,7 +16,7 @@
         }
       </div></div>
       @if (requesting()) {
-        <div class="request-placeholder"><p>Document request form<br>TBD</p></div>
+        <div class="request-fieldset" [class.compliance-request]="item().role === 'Compliance officer'"><div class="request-placeholder"><p>Document request form<br>TBD</p></div></div>
       } @else {
         <h3 class="decision-title">Decision</h3>
         <div class="decision-fields">
@@ -39,9 +39,9 @@
                 }
               </div>
             }
-          } @else if (manager()) {
+          } @else if (manager() || compliance()) {
             <div class="control-group vertical" role="radiogroup" aria-label="Decision">
-              @for (option of managerChoices; track option.value) {
+              @for (option of reviewChoices(); track option.value) {
                 <label auraCell size="m" class="action-control" twClass="outline-none" [attr.data-selected]="item().form.decision === option.value ? '' : null">
                   <span auraCellStart><input auraRadioButton size="m" type="radio" name="decision" [value]="option.value" [checked]="item().form.decision === option.value" (change)="changeDecision(option.value)"></span>
                   <span auraCellText><span auraCellTextLine><span auraCellTitle>{{ option.label }}</span></span></span>
@@ -74,6 +74,10 @@
               <aura-select-form-field-trigger placeholder="Escalate to" aria-label="Escalate to" [ngModel]="item().form.escalateTo" [ngModelOptions]="{standalone:true}" (ngModelChange)="formChange.emit({escalateTo:$event})" />
               <ul *auraPanel auraListbox>@for (target of escalationTargets; track target) { <li auraOption [value]="target">{{ target }}</li> }</ul>
             </aura-select></aura-form-field>
+          }
+          @if (reporting()) {
+            <aura-form-field size="m" surface="primary"><input auraInput placeholder="Description of the operation" aria-label="Description of the operation" [ngModel]="item().form.operationDescription" [ngModelOptions]="{standalone:true}" (ngModelChange)="formChange.emit({operationDescription:$event})"></aura-form-field>
+            <aura-form-field size="m" surface="primary"><input auraInput placeholder="Why the act or operation is suspicious" aria-label="Why the act or operation is suspicious" [ngModel]="item().form.suspiciousReason" [ngModelOptions]="{standalone:true}" (ngModelChange)="formChange.emit({suspiciousReason:$event})"></aura-form-field>
           }
           <aura-form-field size="m" surface="primary" class="followup-field"><textarea auraInput placeholder="Follow-up" aria-label="Follow-up" [minRows]="3" [maxRows]="3" [ngModel]="item().form.followUp" [ngModelOptions]="{standalone:true}" (ngModelChange)="formChange.emit({followUp:$event})"></textarea></aura-form-field>
         </div>

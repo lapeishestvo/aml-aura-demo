@@ -1,17 +1,18 @@
 export const reviewRoles = ['Analyst', 'Manager', 'Compliance officer', 'CCC'] as const;
 export type ReviewRole = typeof reviewRoles[number];
-export type CaseStatus = 'Manager review' | 'De-escalated' | 'Initial review' | 'Documents request' | 'Documents check' | 'Waiting for documents' | 'Waiting for clarification' | 'Closed' | 'Escalated';
-export type Decision = '' | 'true-positive' | 'false-positive' | 'not-suspicious' | 'clarification' | 'edd2' | 'escalate' | 'de-escalate' | 'escalate-compliance';
-export interface ReviewForm { checks: boolean[]; decision: Decision; next: '' | 'edd1' | 'escalate'; documents: '' | 'provided' | 'missing'; escalateTo: string; followUp: string; }
+export type CaseStatus = 'Compliance officer review' | 'Manager review' | 'De-escalated' | 'Initial review' | 'Documents request' | 'Documents check' | 'Waiting for documents' | 'Waiting for clarification' | 'Closed' | 'Escalated';
+export type Decision = '' | 'true-positive' | 'false-positive' | 'not-suspicious' | 'clarification' | 'edd2' | 'escalate' | 'de-escalate' | 'escalate-compliance' | 'edd3' | 'suspicious-report' | 'escalate-ccc';
+export interface ReviewForm { checks: boolean[]; decision: Decision; next: '' | 'edd1' | 'escalate'; documents: '' | 'provided' | 'missing'; escalateTo: string; followUp: string; operationDescription: string; suspiciousReason: string; }
 export interface Person { name: string; description: string; match: boolean; shares?: string; }
 export interface Account { id: string; name: string; status: 'Active' | 'Pending closure' | 'Closed'; overdraft?: string; reason?: string; amount: string; opened: string; }
 export interface ClientProfile { company: string; legalName: string; companyId: string; rfc: string; registration: string; city: string; address: string; activity: string; incorporated: string; employees: string; registered: string; website: string; phone: string; email: string; risk: 'Medium' | 'High' | 'Low'; shareholders: Person[]; ubo: Person[]; representatives: Person[]; supportingDocuments: string[]; accounts: Account[]; apartado: Account[]; }
-export interface ReviewCase { id: string; role: ReviewRole; status: CaseStatus; edd: 0 | 1 | 2 | 3; profile: ClientProfile; form: ReviewForm; lastFollowUp?: string; resolution?: string; }
-export function emptyForm(): ReviewForm { return { checks: [false, false], decision: '', next: '', documents: '', escalateTo: '', followUp: '' }; }
+export interface ReviewCase { id: string; role: ReviewRole; status: CaseStatus; edd: 0 | 1 | 2 | 3; profile: ClientProfile; form: ReviewForm; lastFollowUp?: string; resolution?: string; report?: { operationDescription: string; suspiciousReason: string }; }
+export function emptyForm(): ReviewForm { return { checks: [false, false], decision: '', next: '', documents: '', escalateTo: '', followUp: '', operationDescription: '', suspiciousReason: '' }; }
 export function isEscalation(form: ReviewForm): boolean { return form.decision === 'escalate' || (form.decision === 'true-positive' && form.next === 'escalate'); }
 export function validationError(item: ReviewCase): string {
   if (['Closed', 'Escalated', 'De-escalated', 'Waiting for documents', 'Waiting for clarification'].includes(item.status)) return 'This case is not awaiting an analyst action.';
   if (!item.form.checks.every(Boolean)) return 'Complete both checklist items before continuing.';
+  if (item.status === 'Compliance officer review') return ['not-suspicious', 'edd3', 'suspicious-report', 'escalate-ccc'].includes(item.form.decision) ? '' : 'Select how to proceed with the case.';
   if (item.status === 'Manager review') return ['de-escalate', 'escalate-compliance'].includes(item.form.decision) ? '' : 'Select how to proceed with the case.';
   if (item.status === 'Documents request') return '';
   if (item.status === 'Documents check') {
@@ -31,7 +32,17 @@ export function advanceCase(item: ReviewCase): ReviewCase {
   let status: CaseStatus = item.status;
   let edd = item.edd;
   let resolution = '';
-  if (item.status === 'Manager review') {
+  let report = item.report;
+  if (item.status === 'Compliance officer review') {
+    if (form.decision === 'edd3') { status = 'Documents request'; edd = 3; }
+    else if (form.decision === 'escalate-ccc') { status = 'Escalated'; resolution = 'Escalated to the CCC'; }
+    else {
+      status = 'Closed';
+      resolution = form.decision === 'suspicious-report' ? 'Closed as suspicious and report recorded' : 'Client is no longer suspicious';
+      if (form.decision === 'suspicious-report') report = { operationDescription: form.operationDescription.trim(), suspiciousReason: form.suspiciousReason.trim() };
+    }
+  }
+  else if (item.status === 'Manager review') {
     status = form.decision === 'de-escalate' ? 'De-escalated' : 'Escalated';
     resolution = form.decision === 'de-escalate' ? 'De-escalated to the analyst' : 'Escalated to the compliance officer';
   }
@@ -42,7 +53,7 @@ export function advanceCase(item: ReviewCase): ReviewCase {
   else if (form.decision === 'false-positive' || form.decision === 'not-suspicious') { status = 'Closed'; resolution = form.decision === 'false-positive' ? 'False positive' : 'Client is no longer suspicious'; }
   else if (form.decision === 'true-positive' || form.decision === 'edd2') { status = 'Documents request'; edd = form.decision === 'edd2' ? 2 : 1; }
   else if (form.decision === 'clarification') status = 'Waiting for clarification';
-  return { ...item, status, edd, lastFollowUp: form.followUp.trim(), resolution, form: emptyForm() };
+  return { ...item, status, edd, lastFollowUp: form.followUp.trim(), resolution, report, form: emptyForm() };
 }
 const person = (name: string, description: string, shares?: string, match = false): Person => ({ name, description, shares, match });
 const account = (prefix: string, name: string, status: Account['status'], amount: string, reason?: string, overdraft?: string): Account => ({ id: prefix, name, status, amount, opened: '20 Oct 2025', reason, overdraft });
@@ -74,6 +85,15 @@ export function createManagerCase(): ReviewCase {
   return { id: 'AML-MANAGER-001', role: 'Manager', status: 'Manager review', edd: 0, profile: createCases()[1].profile, form: emptyForm() };
 }
 
+export function createComplianceCase(): ReviewCase {
+  return { id: 'AML-COMPLIANCE-001', role: 'Compliance officer', status: 'Compliance officer review', edd: 0, profile: createCases()[2].profile, form: emptyForm() };
+}
+
 export function casesForRole(items: ReviewCase[], role: ReviewRole): ReviewCase[] {
-  return items.filter(item => item.role === role && (role !== 'Manager' || item.status === 'Manager review'));
+  return items.filter(item => {
+    if (item.role !== role) return false;
+    if (role === 'Manager') return item.status === 'Manager review';
+    if (role === 'Compliance officer') return item.status === 'Compliance officer review' || (item.status === 'Documents request' && item.edd === 3);
+    return true;
+  });
 }

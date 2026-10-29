@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 const output = mkdtempSync(join(tmpdir(), 'aml-case-flow-'));
 execFileSync(resolve('node_modules/.bin/tsc'), ['src/case-model.ts','--outDir',output,'--target','ES2022','--module','commonjs','--skipLibCheck']);
-const { createCases, createManagerCase, casesForRole, advanceCase, validationError } = createRequire(import.meta.url)(join(output, 'case-model.js'));
+const { createCases, createManagerCase, createComplianceCase, casesForRole, advanceCase, validationError } = createRequire(import.meta.url)(join(output, 'case-model.js'));
 process.on('exit', () => rmSync(output, { recursive:true, force:true }));
 const ready = (item, patch) => ({ ...item, form: { ...item.form, checks: [true,true], ...patch } });
 
@@ -117,4 +117,54 @@ test('Manager queue requires both checklist items and one valid decision', () =>
   assert.ok(validationError(ready(manager,{decision:'edd2'})));
   assert.ok(validationError({...ready(manager,{decision:'de-escalate'}),form:{...manager.form,checks:[true,false],decision:'de-escalate'}}));
   assert.equal(validationError(ready(manager,{decision:'escalate-compliance'})),'');
+});
+
+test('Compliance EDD-3 retains case, client and role while moving to document request', () => {
+  const item = createComplianceCase();
+  const request = advanceCase(ready(item,{decision:'edd3',followUp:'Request additional source of funds documents'}));
+  assert.equal(request.id,item.id);
+  assert.equal(request.profile,item.profile);
+  assert.equal(request.role,'Compliance officer');
+  assert.equal(request.status,'Documents request');
+  assert.equal(request.edd,3);
+  assert.equal(request.lastFollowUp,'Request additional source of funds documents');
+  assert.equal(request.form.decision,'');
+  assert.deepEqual(request.form.checks,[false,false]);
+  assert.deepEqual(casesForRole([request],'Compliance officer'),[request]);
+  assert.equal(advanceCase(request),request);
+  const waiting = advanceCase(ready(request,{}));
+  assert.equal(waiting.status,'Waiting for documents');
+  assert.deepEqual(casesForRole([waiting],'Compliance officer'),[]);
+});
+for (const [decision,status] of [
+  ['not-suspicious','Closed'], ['suspicious-report','Closed'], ['escalate-ccc','Escalated'],
+]) {
+  test(`Compliance ${decision} removes the case and preserves other role queues`, () => {
+    const others = [...createCases(),createManagerCase()];
+    const item = createComplianceCase();
+    const completed = advanceCase(ready(item,{decision,followUp:'Review completed',operationDescription:'Repeated incoming transfers',suspiciousReason:'Inconsistent with declared activity'}));
+    assert.equal(completed.id,item.id);
+    assert.equal(completed.status,status);
+    assert.equal(completed.lastFollowUp,'Review completed');
+    const updated = [...others,completed];
+    assert.deepEqual(casesForRole(updated,'Compliance officer'),[]);
+    assert.deepEqual(casesForRole(updated,'Analyst'),others.slice(0,3));
+    assert.deepEqual(casesForRole(updated,'Manager'),[others[3]]);
+    assert.equal(advanceCase(completed),completed);
+    if (decision === 'suspicious-report') {
+      assert.deepEqual(completed.report,{operationDescription:'Repeated incoming transfers',suspiciousReason:'Inconsistent with declared activity'});
+    } else assert.equal(completed.report,undefined);
+  });
+}
+test('Compliance review requires its own decision and complete checklist', () => {
+  const item = createComplianceCase();
+  assert.ok(validationError(item));
+  assert.ok(validationError(ready(item,{})));
+  for (const decision of ['de-escalate','edd2','clarification','escalate']) {
+    const invalid = ready(item,{decision});
+    assert.ok(validationError(invalid));
+    assert.equal(advanceCase(invalid),invalid);
+  }
+  assert.deepEqual(casesForRole([item],'Compliance officer'),[item]);
+  assert.equal(validationError(ready(item,{decision:'escalate-ccc'})),'');
 });
