@@ -1,6 +1,7 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { CasePanel } from './case-panel';
+import { GlobalSidebar } from './global-sidebar';
 import { createCases, advanceCase, validationError, type Person, type ReviewForm } from './case-model';
 import { DocumentsPage } from './documents';
 import { ProductsPage } from './products';
@@ -84,7 +85,7 @@ class PeopleList {
 
 @Component({
   selector: 'aml-root', standalone: true,
-  imports: [AuraCellComponents, AuraBadgeDirective, CheckDetails, PeopleList, DocumentsPage, ProductsPage, CasePanel, TransactionalProfilePage, RiskMatrixPage],
+  imports: [AuraCellComponents, AuraBadgeDirective, CheckDetails, PeopleList, DocumentsPage, ProductsPage, CasePanel, TransactionalProfilePage, RiskMatrixPage, GlobalSidebar],
   templateUrl: './app.html',
 })
 class AmlApp {

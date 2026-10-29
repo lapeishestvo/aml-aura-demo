@@ -228,3 +228,28 @@ aml-risk-matrix { display: flex; flex-direction: column; gap: 4px; min-width: 0;
 .risk-table [auraTableBody] { padding-inline: 0; }
 .risk-table [auraTableRow] { min-height: 52px; margin-inline: -4px; }
 .risk-table [auraTableRow] + [auraTableRow] { margin-top: 0; }
+
+aml-global-sidebar { flex: 0 0 56px; width: 56px; align-self: stretch; }
+.global-sidebar { position: fixed; inset: 0 auto 0 0; width: 56px; z-index: 50; background: var(--color-bg-base); border-right: 1px solid var(--color-border-neutral-subtle); box-sizing: border-box; }
+.sidebar-collapsed { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 36px 16px 20px; box-sizing: border-box; }
+.notification-counter { background: var(--color-bg-error-primary); color: white; border-radius: 20px; padding: 0 4px; min-width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 12px; font-weight: 600; box-sizing: border-box; }
+.sidebar-expanded { display: none; height: 100%; flex-direction: column; }
+.global-sidebar:hover, .global-sidebar:has(:focus-visible), .global-sidebar:focus-visible, .global-sidebar.role-open { width: 360px; box-shadow: 0 3px 27px rgba(32,47,78,.09); }
+.global-sidebar:hover .sidebar-expanded, .global-sidebar:has(:focus-visible) .sidebar-expanded, .global-sidebar:focus-visible .sidebar-expanded, .global-sidebar.role-open .sidebar-expanded { display: flex; }
+.global-sidebar:hover .sidebar-collapsed, .global-sidebar:has(:focus-visible) .sidebar-collapsed, .global-sidebar:focus-visible .sidebar-collapsed, .global-sidebar.role-open .sidebar-collapsed { display: none; }
+.sidebar-notifications { flex: 1; min-height: 0; overflow: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.sidebar-tabs { display: flex; padding: 4px; border-radius: 12px; background: var(--color-bg-neutral-secondary); flex: none; }
+.sidebar-tab { flex: 1; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; gap: 4px; border-radius: 10px; }
+.sidebar-tab.selected { background: var(--color-bg-neutral-primary); }
+.sidebar-static-field { display: flex; align-items: center; gap: 12px; padding: 4px 16px; border-radius: 12px; background: var(--color-bg-neutral-primary); min-height: 48px; box-sizing: border-box; }
+.sidebar-static-field > div { flex: 1; min-width: 0; }
+.sidebar-static-field span { display: block; font-size: 13px; line-height: 16px; color: var(--color-tig-neutral-secondary); }
+.sidebar-static-field p { font-size: 15px; line-height: 20px; }
+.sidebar-filter p { font-size: 17px; }
+.sidebar-notification { padding: 12px; background: var(--color-bg-neutral-primary); border-radius: 12px; }
+.sidebar-notification-meta { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 13px; line-height: 16px; color: var(--color-tig-neutral-secondary); white-space: nowrap; }
+.sidebar-notification > p { margin-top: 12px; font-size: 15px; line-height: 20px; font-weight: 600; }
+.sidebar-footer { flex: none; padding: 20px; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--color-border-neutral-subtle); }
+.sidebar-actions { min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 17px; font-weight: 600; background: var(--color-bg-neutral-primary); border-radius: 12px; }
+.sidebar-role { width: 100%; }
+.sidebar-role [auraLeading] { flex: none; }

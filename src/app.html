@@ -1,4 +1,5 @@
 <div class="crm-shell">
+  <aml-global-sidebar />
   <nav class="case-switcher" aria-label="Cases">
     @for (item of cases(); track item.id) {
       <button type="button" class="case-card" [class.current]="selectedCaseId() === item.id" [attr.aria-current]="selectedCaseId() === item.id ? 'true' : null" (click)="selectCase(item.id)"><span class="case-card-title">{{ item.profile.company }}</span><span class="case-card-status">{{ item.status }}@if (item.edd) { · EDD-{{ item.edd }} }</span></button>
