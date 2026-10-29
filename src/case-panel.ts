@@ -20,16 +20,21 @@ export class CasePanel {
   readonly error = input('');
   readonly formChange = output<Partial<ReviewForm>>();
   readonly submitted = output<void>();
+  readonly ccc = computed(() => this.item().status === 'CCC review');
+  readonly cccChoices = [
+    {value: 'not-suspicious' as Decision, label: 'Client is no longer suspicious'},
+    {value: 'suspicious-report' as Decision, label: 'Close case as suspicious and report'},
+  ];
   readonly complianceDocumentsReview = computed(() => this.item().role === 'Compliance officer' && this.item().status === 'Documents review');
   readonly compliance = computed(() => this.item().status === 'Compliance officer review' || this.complianceDocumentsReview());
-  readonly reporting = computed(() => this.compliance() && this.item().form.decision === 'suspicious-report');
+  readonly reporting = computed(() => (this.compliance() || this.ccc()) && this.item().form.decision === 'suspicious-report');
   readonly complianceChoices = computed(() => [
     {value: 'not-suspicious' as Decision, label: 'Client is no longer suspicious'},
     ...this.complianceDocumentsReview() ? [] : [{value: 'edd3' as Decision, label: 'Request additional documents (EDD-3)'}],
     {value: 'suspicious-report' as Decision, label: 'Close case as suspicious and report'},
     {value: 'escalate-ccc' as Decision, label: this.complianceDocumentsReview() ? 'Escalate case to CCC' : 'Escalate to the CCC'},
   ]);
-  readonly reviewChoices = computed(() => this.compliance() ? this.complianceChoices() : this.managerChoices);
+  readonly reviewChoices = computed(() => this.ccc() ? this.cccChoices : this.compliance() ? this.complianceChoices() : this.managerChoices);
   readonly manager = computed(() => this.item().status === 'Manager review');
   readonly managerChoices = [
     {value: 'de-escalate' as Decision, label: 'De-escalate to the analyst'},
@@ -60,6 +65,7 @@ export class CasePanel {
       ? 'Ask the client for clarification via CRM chat' : '');
   readonly buttonLabel = computed(() => {
     const item = this.item();
+    if (this.ccc()) return item.form.decision === 'not-suspicious' ? 'Close case' : item.form.decision === 'suspicious-report' ? 'Close and report' : 'Continue';
     if (this.compliance()) {
       if (item.form.decision === 'not-suspicious') return 'Close case';
       if (item.form.decision === 'edd3') return 'Start EDD3';

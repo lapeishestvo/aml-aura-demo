@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 const output = mkdtempSync(join(tmpdir(), 'aml-case-flow-'));
 execFileSync(resolve('node_modules/.bin/tsc'), ['src/case-model.ts','--outDir',output,'--target','ES2022','--module','commonjs','--skipLibCheck']);
-const { createCases, createManagerCase, createComplianceCase, createComplianceDocumentsCase, casesForRole, advanceCase, validationError } = createRequire(import.meta.url)(join(output, 'case-model.js'));
+const { createCases, createManagerCase, createComplianceCase, createComplianceDocumentsCase, createCccCase, casesForRole, advanceCase, validationError } = createRequire(import.meta.url)(join(output, 'case-model.js'));
 process.on('exit', () => rmSync(output, { recursive:true, force:true }));
 const ready = (item, patch) => ({ ...item, form: { ...item.form, checks: [true,true], ...patch } });
 
@@ -213,4 +213,35 @@ test('EDD-3 document review rejects requesting EDD-3 again and requires a comple
   assert.ok(validationError(invalid));
   assert.equal(advanceCase(invalid),invalid);
   assert.equal(validationError(ready(item,{decision:'escalate-ccc'})),'');
+});
+
+for (const decision of ['not-suspicious','suspicious-report']) {
+  test(`CCC ${decision} clears its queue and retains the other role cases`, () => {
+    const others = [...createCases(), createManagerCase(), createComplianceCase(), createComplianceDocumentsCase()];
+    const item = createCccCase();
+    assert.deepEqual(casesForRole([...others,item],'CCC'),[item]);
+    const completed = advanceCase(ready(item,{decision,followUp:'Committee decision recorded',operationDescription:'Suspicious transfer',suspiciousReason:'Unconfirmed source of funds'}));
+    assert.equal(completed.status,'Closed');
+    assert.equal(completed.id,item.id);
+    assert.equal(completed.lastFollowUp,'Committee decision recorded');
+    assert.deepEqual(casesForRole([...others,completed],'CCC'),[]);
+    for (const role of ['Analyst','Manager','Compliance officer']) {
+      assert.deepEqual(casesForRole([...others,completed],role),casesForRole(others,role));
+    }
+    assert.equal(advanceCase(completed),completed);
+    if (decision === 'suspicious-report') assert.deepEqual(completed.report,{operationDescription:'Suspicious transfer',suspiciousReason:'Unconfirmed source of funds'});
+    else assert.equal(completed.report,undefined);
+  });
+}
+test('CCC requires its checklist and accepts only its two closure decisions', () => {
+  const item = createCccCase();
+  assert.ok(validationError(item));
+  assert.ok(validationError(ready(item,{})));
+  for (const decision of ['edd3','escalate-ccc','de-escalate']) {
+    const invalid = ready(item,{decision});
+    assert.ok(validationError(invalid));
+    assert.equal(advanceCase(invalid),invalid);
+  }
+  assert.equal(validationError(ready(item,{decision:'not-suspicious'})),'');
+  assert.equal(validationError(ready(item,{decision:'suspicious-report'})),'');
 });
