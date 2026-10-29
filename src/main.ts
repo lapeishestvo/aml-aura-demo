@@ -4,6 +4,7 @@ import { CasePanel } from './case-panel';
 import { createCases, advanceCase, validationError, type Person, type ReviewForm } from './case-model';
 import { DocumentsPage } from './documents';
 import { ProductsPage } from './products';
+import { TransactionalProfilePage } from './transactional-profile';
 import { AuraCellComponents } from '@aura-ng/cell';
 import { AuraBadgeDirective } from '@aura-ng/badge';
 import { AuraButtonComponent } from '@aura-ng/button';
@@ -82,7 +83,7 @@ class PeopleList {
 
 @Component({
   selector: 'aml-root', standalone: true,
-  imports: [AuraCellComponents, AuraBadgeDirective, CheckDetails, PeopleList, DocumentsPage, ProductsPage, CasePanel],
+  imports: [AuraCellComponents, AuraBadgeDirective, CheckDetails, PeopleList, DocumentsPage, ProductsPage, CasePanel, TransactionalProfilePage],
   templateUrl: './app.html',
 })
 class AmlApp {

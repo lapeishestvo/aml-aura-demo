@@ -53,6 +53,7 @@
           </section>
         } @else if (active() === 'documents') { <aml-documents [supportingDocuments]="profile().supportingDocuments" />
         } @else if (active() === 'products') { <aml-products [businessAccounts]="profile().accounts" [apartadoAccounts]="profile().apartado" />
+        } @else if (active() === 'transactional-profile') { <aml-transactional-profile />
         } @else { <div class="workspace-tile"></div> }
       </section>
     </section>

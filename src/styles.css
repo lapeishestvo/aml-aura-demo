@@ -176,3 +176,21 @@ aml-case-panel { display: flex; flex-direction: column; gap: 4px; width: 100%; b
 
 .case-info { display: flex; align-items: center; gap: 8px; padding: 16px; border-radius: 12px; background: var(--color-bg-accent-tertiary); font-size: 15px; line-height: 20px; }
 .case-info-icon { flex: none; width: 20px; height: 20px; background: var(--color-tig-accent-primary, #2663ff); mask: url('../public/assets/7160-35977-imgStrokeInfoCircle.svg') center / 20px 20px no-repeat; }
+
+aml-transactional-profile { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
+.transaction-title, .transaction-section, .transaction-spacer { background: var(--color-bg-neutral-primary); }
+.transaction-title { padding: 20px; }
+.transaction-title p { margin-top: 4px; font-size: 15px; line-height: 20px; }
+.transaction-section h3 { padding: 20px 20px 12px; font-size: 15px; line-height: 20px; font-weight: 600; }
+.transaction-factors { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding-bottom: 20px; row-gap: 20px; }
+.transaction-factor { position: relative; padding: 0 20px; min-width: 0; }
+.transaction-cell[auraCell] { min-height: 0; padding: 0; outline: none !important; cursor: default; }
+.transaction-cell [auraCellText] { padding: 0; gap: 2px; }
+.transaction-cell [auraCellCaption] { font-size: 13px; line-height: 16px; color: var(--color-tig-neutral-secondary); }
+.transaction-cell [auraCellTitle] { font-size: 15px; line-height: 20px; font-weight: 400; white-space: normal; overflow-wrap: normal; }
+.transaction-cell [auraCellTitle].transaction-na { color: var(--color-tig-neutral-tertiary); }
+.transaction-risk { display: flex; align-items: center; gap: 4px; margin-top: 2px; color: var(--color-tig-success-primary); font-size: 15px; line-height: 20px; }
+.transaction-risk.high { color: var(--color-tig-error-primary); }
+.transaction-risk img { flex: none; }
+.transaction-divider { position: absolute; right: -0.5px; top: 0; }
+.transaction-spacer { flex: 1; min-height: 100px; }
